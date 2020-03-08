@@ -21,7 +21,6 @@ class ClientTestCase(unittest.TestCase):
         self.socket_patch = patcher.start()
         self.addCleanup(patcher.stop)
 
-
     def test_construction(self):
         client = Client()
         self.assertFalse(client.is_connected())
@@ -41,6 +40,20 @@ class ClientTestCase(unittest.TestCase):
         sock.close.assert_called_once()
         self.assertIsNone(client._socket)
         self.assertFalse(client.is_connected())
+
+    def test_receive(self):
+        client = Client(self.ip)
+        chunks = [
+            200 * b'0',
+            50 * b'1',
+            30 * b'2',
+            b""
+        ]
+        attrs = {"recv.side_effect": chunks}
+        client._socket.configure_mock(**attrs)
+        self.assertEqual(client.receive(280), b"".join(chunks[:3]))
+
+        self.assertRaises(ConnectionAbortedError, client.receive, 50)
 
 
 def suite():
