@@ -3,6 +3,23 @@ import numpy as np
 
 
 class DataType(object):
+    """Base class for data type objects
+
+    Base class for objects to be used as parser in combination with
+    :class:`~modbusclient.Payload` objects. This base wraps a
+    :class:`~struct.Struct` parser for the conversion between python objects and
+    binary strings.
+
+    Arguments:
+        format (str): Format definition as used by :class:`~struct.Struct`. If
+        the leading exclamation mark ('!') is omitted, it is added automatically.
+        Other byte order marks have to be specified explicitly.
+        nan (object): NAN value to use for this object.
+        swap_words (bool): Swap registers (DWORDS) before conversion. This may
+        be necessary depending on the memory layout used by the application,
+        since MODBUS does not define, how multi-word data types are distributed
+        over various registers. Defaults to `False`.
+    """
     def __init__(self, format, nan=None, swap_words=False):
         if len(format) > 0 and format[0] in "<>!=":
             fmt = format
@@ -35,6 +52,11 @@ class DataType(object):
     
 
 class AtomicType(DataType):
+    """A wrapper for Atomic datatypes which maps NaN to None
+
+    Identical to :class:`~modbusclient.DataType`, except that NaN will be mapped
+    to ``None`` when parsing bytes.
+    """
     def decode(self, bytes):
         val, = super().decode(bytes)
 
@@ -45,6 +67,13 @@ class AtomicType(DataType):
 
 
 class String(AtomicType):
+    """Parser for strings with configurable encoding
+
+    Arguments:
+        len (int): Length of the string in bytes
+        encoding (str): Encoding. Defaults to 'utf8'
+        swap_words (bool): Defaults to ``False``
+    """
     def __init__(self, len, encoding="utf8", swap_words=False):
         super().__init__("{}s".format(len), nan=0, swap_words=swap_words)
         self._encoding = encoding

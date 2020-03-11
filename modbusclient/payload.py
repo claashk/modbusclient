@@ -4,15 +4,22 @@ from datetime import datetime
 class Payload(object):
     """Payload parser
 
-    Small wrapper around struct.Struct parser to simplify message definition and
-    conversion between binary and python representation
+    Small wrapper around parser objects to simplify payload definition. The
+    actual parser is passed as argument `dtype` and has to provide
+    * a method ``encode`` to encode python objects to bytes
+    * a method ``decode`` to convert bytes to python objects
+    * a __len__ implementation returning the number of bytes required in the
+      encoded string.
+
+    For examples of compatible parser implementations refer to the `data_types`
+    module.
 
     Arguments:
-        format (str): Format string in struct.Struct notation. The leading "!"
-           to specify endianess can be omitted
-        address (int): Starting address of the message
+        dtype (object): Datatype object capable of converting from python object
+            to bytes and back. Must provide methods ``encode`` and ``decode``.
+        address (int): Starting address (register number) of the message
         mode (str): Permissible read write modes. Defaults to read only ('r')
-        name (str): Optional string name
+        name (str): Optional name. Defaults to ''.
     """
     def __init__(self, dtype, address, name="", mode='r'):
         self._dtype = dtype
@@ -46,7 +53,7 @@ class Payload(object):
         Two messages are considered equal, if and only if their addresses match.
 
         Arguments:
-            other (:class:`~sma.Message`): Message to compare to
+            other (:class:`~modbusclient.Payload`): Payload to compare to
 
         Return:
             bool: ``True`` if and only if the addresses of both messages are
@@ -58,7 +65,7 @@ class Payload(object):
         """Inequality comparison
 
         Arguments:
-            other (:class:`~sma.Message`): Message to compare to
+            other (:class:`~modbusclient.Payload`): Payload to compare to
 
         Return:
             bool: ``False`` if and only if the addresses of both messages are
@@ -68,10 +75,10 @@ class Payload(object):
 
     @property
     def name(self):
-        """Get name of this message
+        """Get name of this payload
 
         Return:
-            str: message name
+            str: User defined descriptive name of the payload
         """
         return self._name
 
@@ -103,8 +110,8 @@ class Payload(object):
         """Check if message requires Grid guard code to be written
 
         Return:
-            bool: True if and only if this message is writable exclusively with
-                grid guard code
+            bool: True if and only if this message is writable with special
+            permissions only.
         """
         return "w!" in self._mode
 
@@ -169,7 +176,7 @@ class FIX(Payload):
 
 
 class DT(Payload):
-    """Message for times in seconds since the epoch (1970-01-01)"""
+    """Message for times in seconds since 1970-01-01"""
     def encode(self, utc):
         super.encode(int(utc.timestamp() + 0.5))
 
