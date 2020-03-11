@@ -10,6 +10,17 @@ Welcome to modbusclient's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   protocol
+
+Modbus Protocol
+===============
+
+
+Implementation
+==============
+The protocol specific details are implemented in module `protocol`. This includes
+the header definitions along with parsers for binary I/O and the various
+function definitions.
 
 
 Indices and tables

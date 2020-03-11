@@ -1,11 +1,12 @@
 
 from collections import namedtuple
 from struct import Struct
+import logging
 
-from functools import wraps
-
+from .error_codes import MESSAGE_SIZE_ERROR, NO_ERROR
 from .functions import *
 
+logger = logging.getLogger('modbusclient')
 
 def message(name, format, attrs, defaults=None):
     """Create a new message class
@@ -169,3 +170,86 @@ RESPONSE_TYPES = {
 
 MODBUS_PROTOCOL_ID = 0
 NO_UNIT = 0xFF
+
+
+def new_request(function, payload=b"", unit=NO_UNIT, transaction=0, **kwargs):
+    """Create a request message
+
+    Arguments:
+        function (int): Function code
+        payload (bytes): Data sent along with the request. Empty by default.
+            Used only for writing functions.
+        unit (int): Unit ID of device. Defaults to NO_UNIT
+        transaction (int): Transaction ID. Defaults to 0.
+        kwargs (dict): Keyword arguments passed verbatim to the request of
+          the function
+
+    Return:
+        tuple(~modbusclient.ApplicationProtocolHeader, bytes): Header of the request
+        and the request in binary form.
+    """
+    try:
+        RequestType = REQUEST_TYPES[function]
+    except KeyError:
+        raise RuntimeError("Unsupported Function ID", function)
+    logger.debug("Creating %s request", str(RequestType))
+    if payload:
+        kwargs['size'] = len(payload)
+    request = RequestType(**kwargs)
+    nbytes = 2 + len(request) + kwargs.get('size', 0)
+    header = ApplicationProtocolHeader(transaction=transaction,
+                                       protocol=MODBUS_PROTOCOL_ID,
+                                       length=nbytes,
+                                       unit=unit,
+                                       function=function)
+    buffer = b"".join([header.to_buffer(), request.to_buffer(), payload])
+    return header, buffer
+
+
+def parse_response_header(buffer):
+    """Parse response header
+
+    Arguments:
+        buffer (bytes): Buffer containing the Application protocol header
+
+    Return:
+        ~modbusclient.ApplicationProtocolHeader: Application protocol header
+
+    Raise:
+        RuntimeError: if header.protocol does not match MODBUS_PROTOCOL_ID
+    """
+    logger.debug("Parsing Application Protocol header ...")
+    header = ApplicationProtocolHeader.from_buffer(buffer)
+
+    if header.protocol != MODBUS_PROTOCOL_ID:
+        raise RuntimeError("Invalid protocol ID", header.protocol)
+
+    return header
+
+
+def parse_response_body(header, buffer):
+    """Parse response body
+
+    Arguments:
+        header (:class:`~modbusclient.ApplicationProtocolHeader`): The header. See
+            e.g. :func:`parse_response_header`
+        buffer (bytes): Buffer containing the response body after the header
+
+    Return:
+        tuple(object, int): Payload and error code
+    """
+    logger.debug("Parsing response body ...")
+    if header.function > ERROR_FLAG:  # second byte = function code
+        msg = Error.from_buffer(buffer)
+        err_code = msg.exception_code
+        payload = b""
+    else:
+        response_type = RESPONSE_TYPES[header.function]
+        msg = response_type.from_buffer(buffer)
+        payload = buffer[len(msg):]
+
+        if payload and (len(payload) != msg.size):
+            err_code = MESSAGE_SIZE_ERROR
+        else:
+            err_code = NO_ERROR
+    return payload, err_code
