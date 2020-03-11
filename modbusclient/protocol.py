@@ -3,19 +3,27 @@ from collections import namedtuple
 from struct import Struct
 import logging
 
-from .error_codes import MESSAGE_SIZE_ERROR, NO_ERROR
+from .error_codes import *
 from .functions import *
 
 logger = logging.getLogger('modbusclient')
 
-def message(name, format, attrs, defaults=None):
-    """Create a new message class
 
-    Creates a message class based on namedtuple. The class contains additional
-    methods to read and write its content to a binary buffer:
+MODBUS_PROTOCOL_ID = 0
+NO_UNIT = 0xFF
 
-    * from_buffer
-    * to_buffer
+
+def create_header(name, format, attrs, defaults=None):
+    """Create a new header
+
+    Creates a header class based on namedtuple. The namedtuple components provide
+    a convenient access to the data stored in the header. Additionally classes
+    created by this function contain two methods to read from and write to a
+    binary buffer:
+
+    * static method from_buffer creates an object from a binary buffer
+    * to_buffer: writes content of the header to a binary buffer
+    * __len__ : Provides the length of the header (excluding payload) in bytes
 
     Arguments:
         name (str): Name of class to create
@@ -25,7 +33,8 @@ def message(name, format, attrs, defaults=None):
         defaults (tuple): Default value for each attribute in attrs
 
     Return:
-        class: Class object
+        class: Class object capable of storing the header content with additional
+        methods to parse and serialize the stored data in binary form.
     """
     Base = namedtuple("Base", attrs)
 
@@ -87,72 +96,94 @@ def message(name, format, attrs, defaults=None):
     return msg_type
 
 
-ApplicationProtocolHeader = message("ApplicationProtocolHeader",
-                                    "3H2B",
-                                    "transaction protocol length unit function",
-                                    (1, 0, 0, 3, 0x80))
+ApplicationProtocolHeader = create_header("ApplicationProtocolHeader",
+                                "3H2B",
+                                "transaction protocol length unit function",
+                                (1, 0, 0, 3, 0x80))
 ApplicationProtocolHeader.__doc__ = """Modbus Application Protocol Header (MBAP)
 
-The application header in this implementation has a size of eight bytes and
-contains:
-* a transaction ID to uniquely identify the transaction in case several requests
-  are sent in parallel
-* protocol id: 0 for MODBUS
-* length: The number of following bytes including the unit identifier byte (and
-  all following data bytes). For a request, this has to be set by the client,
-  while the response length is set by the server
-* Unit ID of the server.
-* function code. In the MODBUS specification this is actually part of the PDU,
-  but the communication is simplyfied by including it in the MBAP instead. In
-  case of errors, this variable assumes the error function code (0x80).
+The application header in this implementation has a size of eight bytes. It is
+added to every request sent by a client. The server copies the MBAP into its
+response with a modified length field.
 
-The MBAP is added to every request sent by a client. The server copies the MBAP
-into its response. Only the length field will be adapted.
+Attributes:
+    transaction (int): Transaction ID to uniquely identify the transaction in
+        if several requests are sent in parallel
+    protocol (int): MODBUS protocol id (always 0)
+    length (int) Number of bytes including the unit identifier byte and all
+       following data bytes. For a request, this has to be set by the client,
+       while the response length is set by the server
+    unit (int): Unit ID of the server. Defaults to NO_UNIT
+    function (int): Function code. In the MODBUS specification this is actually
+        part of the PDU. Since the communication is simplified by including it in
+        the MBAP instead. In case of errors, this variable assumes the error
+        function code (0x80).
 """
 
-ReadRequest = message("ReadRequest", "2H", "start count")
+ReadRequest = create_header("ReadRequest", "2H", "start count")
 ReadRequest.__doc__ = """Modbus Read Request Protocol Data Unit (PDU)
 
-The request PDU usually starts with a single byte containing the function code,
-which has been moved into the MBAP in this implementation. Requests thus contain
-a starting address and the number of registers/coils to read.
+Attributes:
+    start (int): Address of (first) register to read from
+    count (int): Number of coils/registers to read from
+
+Note:
+    A PDU usually starts with a single byte containing the function code, which
+    is part of the :class:`~modbusclient.ApplicationProtocolHeader` in this
+    implementation.
 """
 
-WriteRequest = message("WriteRequest", "2HB", "start count size")
+WriteRequest = create_header("WriteRequest", "2HB", "start count size")
 WriteRequest.__doc__ = """Modbus Write Request Protocol Data Unit (PDU)
 
-The request PDU usually starts with a single byte containing the function code,
-which has been moved into the MBAP in this implementation. Write requests for
-multiple coils/registers thus contain a starting address, the number of
-registers/coils to read and the size of the data buffer containing the bytes to
-write.
+Attributes:
+    start (int): Address of (first) register to write to
+    count (int): Number fo coils/registers to write to
+    size (int): Number of payload bytes to write
+
+Note:
+    A PDU usually starts with a single byte containing the function code, which
+    is part of the :class:`~modbusclient.ApplicationProtocolHeader` in this
+    implementation.
 """
 
-ReadResponse = message("ReadResponse", "B", "size")
+ReadResponse = create_header("ReadResponse", "B", "size")
 ReadResponse.__doc__ = """Modbus Response Protocol Data Unit (PDU)
 
-The response PDU usually starts with a single byte containing the function code,
-which has been moved into the MBAP in this implementation. Responses thus contain
-just the size of the response buffer.
+Attributes:
+    size (int): Number of payload bytes
 
+Note:
+    A PDU usually starts with a single byte containing the function code, which
+    is part of the :class:`~modbusclient.ApplicationProtocolHeader` in this
+    implementation.
 """
 
-WriteResponse = message("WriteResponse", "2H", "start count")
+WriteResponse = create_header("WriteResponse", "2H", "start count")
 WriteResponse.__doc__ = """Modbus Response Protocol Data Unit (PDU)
 
-The response PDU usually starts with a single byte containing the function code,
-which has been moved into the MBAP in this implementation. Responses to write
-opterations of multiple registers thus contain a starting address and the number
-of registers, which have been written.
+Attributes:
+    start (int): Address of (first) register to write to
+    count (int): Number of coils/registers which have been written
+
+Note:
+    A PDU usually starts with a single byte containing the function code, which
+    is part of the :class:`~modbusclient.ApplicationProtocolHeader` in this
+    implementation.
 """
 
-Error = message("Error", "B", "exception_code")
+Error = create_header("Error", "B", "exception_code")
 Error.__doc__= """Modbus Error Protocol Data Unit (PDU)
 
-Implementation of the error PDU. It usually starts with a single byte containing
-the error function code (0x80), which has been moved into the MBAP in this
-implementation. Thus the error PDU contains a single byte containing the
-exception code
+PDU sent on errors by the server. 
+
+Attributes:
+    exception_code (int): Exception code.
+
+Note:
+    A PDU usually starts with a single byte containing the function code, which
+    is part of the :class:`~modbusclient.ApplicationProtocolHeader` in this
+    implementation.
 """
 
 REQUEST_TYPES = {
@@ -167,9 +198,6 @@ RESPONSE_TYPES = {
     READ_INPUT_REGISTER : ReadResponse,
     WRITE_MULTIPLE_REGISTERS : WriteResponse
 }
-
-MODBUS_PROTOCOL_ID = 0
-NO_UNIT = 0xFF
 
 
 def new_request(function, payload=b"", unit=NO_UNIT, transaction=0, **kwargs):

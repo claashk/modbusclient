@@ -1,10 +1,9 @@
 
 import socket
-from .messages import ApplicationProtocolHeader, REQUEST_TYPES, RESPONSE_TYPES, Error
-from .functions import ERROR_FLAG
-from .messages import MODBUS_PROTOCOL_ID, NO_UNIT
-from .error_codes import MESSAGE_SIZE_ERROR, INVALID_TRANSACTION_ID, UNIT_MISMATCH
-from .error_codes import NO_ERROR
+
+from .protocol import ApplicationProtocolHeader, NO_UNIT
+from .protocol import new_request, parse_response_header, parse_response_body
+from .protocol import INVALID_TRANSACTION_ID, UNIT_MISMATCH
 
 
 class Client(object):
@@ -63,12 +62,12 @@ class Client(object):
             self._socket.close()
             self._socket = None
 
-    def request(self, function, data=b"", unit=NO_UNIT, transaction=0, **kwargs):
+    def request(self, function, payload=b"", unit=NO_UNIT, transaction=0, **kwargs):
         """Send a request to the server
 
         Arguments:
             function (int): Function code
-            data (bytes): Data sent along with the request. Empty by default.
+            payload (bytes): Data sent along with the request. Empty by default.
                 Used only for writing functions.
             unit (int): Unit ID of device. Defaults to NO_UNIT
             transaction (int): Transaction ID. Defaults to 0.
@@ -79,20 +78,12 @@ class Client(object):
             ~modbus.ApplicationProtocolHeader: Header of the request
         """
         self.assert_connected()
-        try:
-            RequestType = REQUEST_TYPES[function]
-        except KeyError:
-            raise RuntimeError("Unsupported Function ID", function)
-        if data:
-            kwargs['size'] = len(data)
-        request = RequestType(**kwargs)
-        header = ApplicationProtocolHeader(transaction=transaction,
-                                           protocol=MODBUS_PROTOCOL_ID,
-                                           length=2+len(request),
-                                           unit=unit,
-                                           function=function)
-        buffer = b"".join([header.to_buffer(), request.to_buffer(), data])
-        self._socket.sendall(buffer)
+        header, msg = new_request(function=function,
+                                  payload=payload,
+                                  unit=unit,
+                                  transaction=transaction,
+                                  **kwargs)
+        self._socket.sendall(msg)
         return header
 
     def receive(self, size):
@@ -122,34 +113,18 @@ class Client(object):
         """Get response from the server
 
         Return:
-            tuple(~modbus.ApplicationProtocolHeader, bytes, int): The following
-            values will be returned:
+            tuple(~modbusclient.ApplicationProtocolHeader, bytes, int): The
+            following values will be returned:
             * The received MBAP header
             * The raw data bytes of the payload without any headers
             * An error code or ``None``, if no error occurred.
         """
         buffer = self.receive(ApplicationProtocolHeader.parser.size)
-        header = ApplicationProtocolHeader.from_buffer(buffer)
-
-        if header.protocol != MODBUS_PROTOCOL_ID:
-            raise RuntimeError("Invalid protocol ID", header.protocol)
-
+        header = parse_response_header(buffer)
         buffer = self.receive(header.length - 2)
+        payload, err_code = parse_response_body(header, buffer)
 
-        if header.function > ERROR_FLAG: #second byte = function code
-            msg = Error.from_buffer(buffer)
-            err_code = msg.exception_code
-            data = b""
-        else:
-            response_type = RESPONSE_TYPES[header.function]
-            msg = response_type.from_buffer(buffer)
-            data = buffer[len(msg):]
-
-            if data and (len(data) != msg.size):
-                err_code = MESSAGE_SIZE_ERROR
-            else:
-                err_code = NO_ERROR
-        return header, data, err_code
+        return header, payload, err_code
 
     def iter_responses(self, n):
         """Iter over a number of responses

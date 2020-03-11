@@ -1,11 +1,10 @@
 
 from asyncio import open_connection
 from logging import getLogger
-from modbusclient.messages import ApplicationProtocolHeader, REQUEST_TYPES, RESPONSE_TYPES, Error
-from modbusclient.functions import ERROR_FLAG
-from modbusclient.messages import MODBUS_PROTOCOL_ID, NO_UNIT
-from modbusclient.error_codes import MESSAGE_SIZE_ERROR, INVALID_TRANSACTION_ID, UNIT_MISMATCH
-from modbusclient.error_codes import NO_ERROR
+
+from ..protocol import ApplicationProtocolHeader, parse_response_body
+from ..protocol import new_request, parse_response_header
+from ..protocol import INVALID_TRANSACTION_ID, UNIT_MISMATCH, NO_UNIT
 
 
 class Client(object):
@@ -70,12 +69,12 @@ class Client(object):
             # await self._writer.wait_closed() -> python3.7
             self._writer = None
 
-    def request(self, function, data=b"", unit=NO_UNIT, transaction=0, **kwargs):
+    def request(self, function, payload=b"", unit=NO_UNIT, transaction=0, **kwargs):
         """Send a request to the server asynchronously
 
         Arguments:
             function (int): Function code
-            data (bytes): Data sent along with the request. Empty by default.
+            payload (bytes): Data sent along with the request. Empty by default.
                 Used only for writing functions.
             unit (int): Unit ID of device. Defaults to NO_UNIT
             transaction (int): Transaction ID. Defaults to 0.
@@ -87,21 +86,13 @@ class Client(object):
         """
         self._logger.debug("Requesting function %s", str(function))
         self.assert_connected()
-        try:
-            RequestType = REQUEST_TYPES[function]
-        except KeyError:
-            raise RuntimeError("Unsupported Function ID", function)
-        if data:
-            kwargs['size'] = len(data)
-        request = RequestType(**kwargs)
-        header = ApplicationProtocolHeader(transaction=transaction,
-                                           protocol=MODBUS_PROTOCOL_ID,
-                                           length=2+len(request),
-                                           unit=unit,
-                                           function=function)
-        buffer = b"".join([header.to_buffer(), request.to_buffer(), data])
-        self._logger.debug("Sending %s request", str(RequestType))
-        self._writer.write(buffer)
+        header, msg = new_request(function=function,
+                                  payload=payload,
+                                  unit=unit,
+                                  transaction=transaction,
+                                  **kwargs)
+        self._logger.debug("Sending request ...")
+        self._writer.write(msg)
         return header
 
     async def get_response(self):
@@ -116,31 +107,12 @@ class Client(object):
         """
         self.assert_connected()
         nbytes = ApplicationProtocolHeader.parser.size
-        self._logger.debug("Reading Application Protocol header")
         buffer = await self._reader.readexactly(nbytes)
-        header = ApplicationProtocolHeader.from_buffer(buffer)
-
-        if header.protocol != MODBUS_PROTOCOL_ID:
-            raise RuntimeError("Invalid protocol ID", header.protocol)
-
-        self._logger.debug("Reading payload")
+        header = parse_response_header(buffer)
         buffer = await self._reader.readexactly(header.length - 2)
-
-        if header.function > ERROR_FLAG: #second byte = function code
-            msg = Error.from_buffer(buffer)
-            err_code = msg.exception_code
-            data = b""
-        else:
-            response_type = RESPONSE_TYPES[header.function]
-            msg = response_type.from_buffer(buffer)
-            data = buffer[len(msg):]
-
-            if data and (len(data) != msg.size):
-                err_code = MESSAGE_SIZE_ERROR
-            else:
-                err_code = NO_ERROR
-        self._logger.debug("Got response: %s, %s, %s", header, data, err_code)
-        return header, data, err_code
+        payload, err_code = parse_response_body(header, buffer)
+        self._logger.debug("Got response: %s, %s, %s", header, payload, err_code)
+        return header, payload, err_code
 
     async def iter_responses(self, n):
         """Iter over a number of responses
@@ -168,7 +140,7 @@ class Client(object):
             tuple: Data returned by :meth:`~modbus.Client.get_response`
         """
         req = self.request(function, **kwargs)
-        resp, data, error = await self.get_response()
+        resp, payload, error = await self.get_response()
 
         if resp.transaction != req.transaction:
             error = INVALID_TRANSACTION_ID
@@ -177,7 +149,7 @@ class Client(object):
             if resp.unit != NO_UNIT:
                 error = UNIT_MISMATCH
 
-        return resp, data, error
+        return resp, payload, error
 
     def assert_connected(self):
         """Assert client is connected
