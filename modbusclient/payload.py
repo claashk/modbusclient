@@ -6,9 +6,10 @@ class Payload(object):
 
     Small wrapper around parser objects to simplify payload definition. The
     actual parser is passed as argument `dtype` and has to provide
+
     * a method ``encode`` to encode python objects to bytes
     * a method ``decode`` to convert bytes to python objects
-    * a __len__ implementation returning the number of bytes required in the
+    * a ``__len__`` implementation returning the number of bytes required in the
       encoded string.
 
     For examples of compatible parser implementations refer to the `data_types`
@@ -18,8 +19,8 @@ class Payload(object):
         dtype (object): Datatype object capable of converting from python object
             to bytes and back. Must provide methods ``encode`` and ``decode``.
         address (int): Starting address (register number) of the message
-        mode (str): Permissible read write modes. Defaults to read only ('r')
-        name (str): Optional name. Defaults to ''.
+        mode (str): Permissible read write modes. Defaults to read only (``'r'``)
+        name (str): Optional name. Defaults to ``''``.
     """
     def __init__(self, dtype, address, name="", mode='r'):
         self._dtype = dtype
@@ -138,7 +139,7 @@ class Payload(object):
         return self._dtype.decode(buffer)
 
 
-class ENUM(Payload):
+class Enum(Payload):
     """Specialisation for enumeration messages
 
     Accepts an additional dictionary as argument, which relates the keys to
@@ -155,7 +156,7 @@ class ENUM(Payload):
         return self.choices[name]
 
 
-class FIX(Payload):
+class Fixpoint(Payload):
     """Specialisation of :class:´~modbus.sma.Message` for fixed point floats
 
     Arguments:
@@ -175,7 +176,7 @@ class FIX(Payload):
         return float(val) / self._scale
 
 
-class DT(Payload):
+class Timestamp(Payload):
     """Message for times in seconds since 1970-01-01"""
     def encode(self, utc):
         super.encode(int(utc.timestamp() + 0.5))
