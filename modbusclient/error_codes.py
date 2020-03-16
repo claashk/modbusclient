@@ -25,3 +25,7 @@ ERROR_MESSAGES = {
     GATEWAY_PATH_UNAVAILABLE: "gateway path unavailable",
     GATEWAY_TARGET_FAILED_TO_RESPOND: "gateway target failed to respond"
 }
+
+class ModbusError(RuntimeError):
+    def __init__(self, err_code, *args):
+        super().__init__(err_code, ERROR_MESSAGES[err_code], *args)
