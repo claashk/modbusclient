@@ -12,6 +12,7 @@ Welcome to modbusclient's documentation!
 
    protocol
    payload
+   client
 
 Implementation Overview
 =======================

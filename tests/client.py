@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from modbusclient import Client
+from modbusclient.protocol import DEFAULT_PORT
 import unittest
 import unittest.mock as mock
 
@@ -12,9 +13,8 @@ class ClientTestCase(unittest.TestCase):
         """Set up test parameters
         """
         self.ip = "123.234.222.123"
-        self.port = "321"
+        self.port = 321
         self.timeout = 12
-        self.default_port = 502
         self.default_timeout = None
 
         patcher = mock.patch("modbusclient.client.socket.create_connection")
@@ -26,14 +26,23 @@ class ClientTestCase(unittest.TestCase):
         self.assertFalse(client.is_connected())
         self.socket_patch.assert_not_called()
 
+        client = Client(self.ip, self.port, self.timeout, connect=False)
+        self.assertFalse(client.is_connected())
+        self.assertEqual(self.ip, client.address)
+        self.assertEqual(self.port, client.port)
+        self.assertEqual(self.timeout, client.timeout)
+
         client = Client(self.ip, self.port, self.timeout)
+        self.assertEqual(self.ip, client.address)
+        self.assertEqual(self.port, client.port)
+        self.assertEqual(self.timeout, client.timeout)
         self.assertTrue(client.is_connected())
         self.socket_patch.assert_called_with((self.ip, self.port), self.timeout)
 
     def test_context_manager(self):
-        with Client(self.ip) as client:
+        with Client(self.ip, connect=False) as client:
             self.assertTrue(client.is_connected())
-            self.socket_patch.assert_called_with((self.ip, self.default_port),
+            self.socket_patch.assert_called_with((self.ip, DEFAULT_PORT),
                                                  self.default_timeout)
             sock = client._socket
         sock.shutdown.assert_called_once()

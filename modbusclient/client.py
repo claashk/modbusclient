@@ -1,7 +1,7 @@
 
 import socket
 
-from .protocol import ApplicationProtocolHeader, NO_UNIT
+from .protocol import ApplicationProtocolHeader, NO_UNIT, DEFAULT_PORT
 from .protocol import new_request, parse_response_header, parse_response_body
 from .protocol import INVALID_TRANSACTION_ID, UNIT_MISMATCH
 
@@ -18,14 +18,28 @@ class Client(object):
         port (int): Port to use. Defaults to 502
         timeout (float): Timeout in seconds. If not set, it will be set to
            the default timeout.
+        connect (bool): If True, the client immediately connects if an address
+           is specified. Otherwise a call to :meth:`connect` or :meth:`__enter__`
+           is required.
+
+    Attributes:
+        address (string): IP Adress of the host
+        port (int): Port to use. Defaults to 502
+        timeout (int or None): Timeout in seconds
     """
-    def __init__(self, address="", port=502, timeout=None):
+    def __init__(self, address="", port=DEFAULT_PORT, timeout=None, connect=True):
         self._socket = None
 
-        if address:
-            self.connect(address, port, timeout)
+        self.address = address
+        self.port = port
+        self.timeout = timeout
+
+        if self.address and connect:
+            self.connect()
 
     def __enter__(self):
+        if not self.is_connected():
+            self.connect()
         return self
 
     def __exit__(self, type, value, traceback):
@@ -39,17 +53,25 @@ class Client(object):
         """
         return bool(self._socket)
 
-    def connect(self, address, port=502, timeout=None):
+    def connect(self, **kwargs):
         """Connect this client to a host
 
         Arguments:
-            address (string): IP Adress of the host
-            port (int): Port to use. Defaults to 502
-            timeout (float): Timeout in seconds. If not set, it will be set to
-               the default timeout.
+            address (string): IP Adress of the host. If provided, it will replace
+                the current :attr:`Client.address`. Defaults to
+                :attr:`Client.address`
+            port (int): Port to use. If provided, it will replace
+                the current :attr:`Client.port`. Defaults to :attr:`Client.port`.
+            timeout (float): Timeout in seconds. If provided, it will replace
+                the current :attr:`Client.timeout`. Defaults to
+                :attr:`Client.timeout`
         """
         self.disconnect()
-        self._socket = socket.create_connection((address, port), timeout)
+        self.address = kwargs.get("address", self.address)
+        self.port = kwargs.get("port", self.port)
+        self.timeout = kwargs.get("timeout", self.timeout)
+        self._socket = socket.create_connection((self.address, self.port),
+                                                self.timeout)
 
     def disconnect(self):
         """Disconnect this client
@@ -71,7 +93,7 @@ class Client(object):
                 Used only for writing functions.
             unit (int): Unit ID of device. Defaults to NO_UNIT
             transaction (int): Transaction ID. Defaults to 0.
-            kwargs (dict): Keyword arguments passed verbatim to the request of
+            **kwargs (dict): Keyword arguments passed verbatim to the request of
               the function
 
         Return:
@@ -115,6 +137,7 @@ class Client(object):
         Return:
             tuple(~modbusclient.ApplicationProtocolHeader, bytes, int): The
             following values will be returned:
+
             * The received MBAP header
             * The raw data bytes of the payload without any headers
             * An error code or ``None``, if no error occurred.
