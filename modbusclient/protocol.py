@@ -11,6 +11,7 @@ logger = logging.getLogger('modbusclient')
 
 MODBUS_PROTOCOL_ID = 0
 NO_UNIT = 0xFF
+DEFAULT_PORT = 502
 
 
 def create_header(name, format, attrs, defaults=None):
@@ -187,15 +188,15 @@ Note:
 """
 
 REQUEST_TYPES = {
-    READ_HOLDING_REGISTER : ReadRequest,
-    READ_INPUT_REGISTER : ReadRequest,
+    READ_HOLDING_REGISTERS : ReadRequest,
+    READ_INPUT_REGISTERS : ReadRequest,
     WRITE_MULTIPLE_REGISTERS : WriteRequest
     # TODO ...
 }
 
 RESPONSE_TYPES = {
-    READ_HOLDING_REGISTER : ReadResponse,
-    READ_INPUT_REGISTER : ReadResponse,
+    READ_HOLDING_REGISTERS : ReadResponse,
+    READ_INPUT_REGISTERS : ReadResponse,
     WRITE_MULTIPLE_REGISTERS : WriteResponse
 }
 
