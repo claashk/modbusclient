@@ -1,4 +1,5 @@
 from datetime import datetime
+from .functions import *
 
 
 class Payload(object):
@@ -22,11 +23,26 @@ class Payload(object):
         mode (str): Permissible read write modes. Defaults to read only (``'r'``)
         name (str): Optional name. Defaults to ``''``.
     """
-    def __init__(self, dtype, address, name="", mode='r'):
+    def __init__(self, dtype, address, name="", mode='r', reader=None, writer=None):
         self._dtype = dtype
         self._address = address
         self._mode = mode
         self._name = name
+        self._reader = reader
+        self._writer = writer
+
+        if self._reader is None:
+            if self.is_writable:
+                self._reader = READ_HOLDING_REGISTERS
+            else:
+                self._reader = READ_INPUT_REGISTERS
+
+        if self._writer is None:
+            if self.is_writable:
+                if self.register_count == 1:
+                    self._writer = WRITE_SINGLE_REGISTER
+                else:
+                    self._writer = WRITE_MULTIPLE_REGISTERS
 
     def __len__(self):
         """Get length of this message in bytes
@@ -100,6 +116,26 @@ class Payload(object):
             int: Number of 2-byte registers used by this parser
         """
         return (len(self) + 1) // 2
+
+    @property
+    def reader(self):
+        """Get function code used to read this value from device
+
+        Return:
+            int: Function code used to read this value from device. ``None`` if
+            value cannot be read.
+        """
+        return self._reader
+
+    @property
+    def writer(self):
+        """Get function code used to write this value to device
+
+        Return:
+            int: Function code used to write this value to a device. ``None`` if
+            value cannot be written.
+        """
+        return self._writer
 
     @property
     def is_writable(self):
