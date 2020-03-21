@@ -10,6 +10,7 @@ Welcome to modbusclient's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   api
    protocol
    payload
    client
