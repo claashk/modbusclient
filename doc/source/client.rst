@@ -11,3 +11,11 @@ Default Client
    :members:
    :special-members: __enter__, __exit__
    :no-undoc-members:
+
+Asynchronous Client
+===================
+
+.. autoclass:: modbusclient.asyncio.Client
+   :members:
+   :special-members: __aenter__, __aexit__
+   :no-undoc-members:

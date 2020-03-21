@@ -30,7 +30,10 @@ class DefaultApi(object):
                  connect=False,
                  unit=NO_UNIT):
         self.__dict__['_api'] = commands
-        self.__dict__['_client'] = Client(address, port, timeout, connect=connect)
+        self.__dict__['_client'] = Client(address=address,
+                                          port=port,
+                                          timeout=timeout,
+                                          connect=connect)
         self.__dict__['unit'] = unit
 
     def __enter__(self):
