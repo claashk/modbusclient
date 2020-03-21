@@ -60,7 +60,7 @@ class Payload(object):
 
     def __str__(self):
         components = ["Message {}".format(self.address)]
-        for attr, fmt in [("name", " ({})"), ("unit", " [{}]")]:
+        for attr, fmt in [("name", " ({})"), ("units", " [{}]")]:
             try:
                 components.append(fmt.format(getattr(self, attr)))
             except AttributeError:

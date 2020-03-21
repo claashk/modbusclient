@@ -46,8 +46,8 @@ class PayloadTestCase(unittest.TestCase):
     def test_str(self):
         self.assertEqual(str(self.new()), "Message 1000")
         self.assertEqual(str(self.new(name="name")), "Message 1000 (name)")
-        self.assertEqual(str(self.new(unit="kW")), "Message 1000 [kW]")
-        self.assertEqual(str(self.new(name="power", unit="W")),
+        self.assertEqual(str(self.new(units="kW")), "Message 1000 [kW]")
+        self.assertEqual(str(self.new(name="power", units="W")),
                          "Message 1000 (power) [W]")
 
     def test_encode(self):
