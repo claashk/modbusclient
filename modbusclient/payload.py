@@ -59,11 +59,13 @@ class Payload(object):
         return len(self._dtype)
 
     def __str__(self):
-        try:
-            namestr = " ({})".format(self.name)
-        except AttributeError:
-            namestr = ""
-        return "Message {}{}".format(self._address, namestr)
+        components = ["Message {}".format(self.address)]
+        for attr, fmt in [("name", " ({})"), ("unit", " [{}]")]:
+            try:
+                components.append(fmt.format(getattr(self, attr)))
+            except AttributeError:
+                pass
+        return "".join(components)
 
     def __hash__(self):
         """Get hash of this Message
