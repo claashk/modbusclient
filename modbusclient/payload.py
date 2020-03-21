@@ -21,15 +21,21 @@ class Payload(object):
             to bytes and back. Must provide methods ``encode`` and ``decode``.
         address (int): Starting address (register number) of the message
         mode (str): Permissible read write modes. Defaults to read only (``'r'``)
-        name (str): Optional name. Defaults to ``''``.
+        **kwargs (dict): Additional properties added verbatim to this instance.
     """
-    def __init__(self, dtype, address, name="", mode='r', reader=None, writer=None):
+    def __init__(self,
+                 dtype,
+                 address,
+                 mode='r',
+                 reader=None,
+                 writer=None,
+                 **kwargs):
         self._dtype = dtype
         self._address = address
         self._mode = mode
-        self._name = name
         self._reader = reader
         self._writer = writer
+        vars(self).update(kwargs)
 
         if self._reader is None:
             if self.is_writable:
@@ -53,7 +59,11 @@ class Payload(object):
         return len(self._dtype)
 
     def __str__(self):
-        return "Message {} ({})".format(self._address, self._name)
+        try:
+            namestr = " ({})".format(self.name)
+        except AttributeError:
+            namestr = ""
+        return "Message {}{}".format(self._address, namestr)
 
     def __hash__(self):
         """Get hash of this Message
@@ -89,15 +99,6 @@ class Payload(object):
             equal.
         """
         return self._address != other._address
-
-    @property
-    def name(self):
-        """Get name of this payload
-
-        Return:
-            str: User defined descriptive name of the payload
-        """
-        return self._name
 
     @property
     def address(self):
@@ -182,24 +183,25 @@ class Enum(Payload):
     a string describing the meaning.
 
     Arguments:
+        choices(dict): Dictionary mapping enum values to values
 
     """
-    def __init__(self, dtype, address, name="", choices=None, mode="r"):
-        super().__init__(dtype, address=address, name=name, mode=mode)
-        self.choices=choices
+    def __init__(self, dtype, address, choices=dict(), mode="r", **kwargs):
+        super().__init__(dtype, address=address, mode=mode, **kwargs)
+        self.choices = choices
 
     def __getitem__(self, name):
         return self.choices[name]
 
 
 class Fixpoint(Payload):
-    """Specialisation of :class:´~modbus.sma.Message` for fixed point floats
+    """Specialisation of :class:´Payload` for fixed point floats
 
     Arguments:
         dtype ()
     """
-    def __init__(self, dtype, address, name="", mode="r", digits=0):
-        super().__init__(dtype, address=address, name=name, mode=mode)
+    def __init__(self, dtype, address, mode="r", digits=0, **kwargs):
+        super().__init__(dtype, address=address, mode=mode, **kwargs)
         self._scale = 10**digits
 
     def encode(self, value):
