@@ -9,6 +9,7 @@ from ..protocol import UNIT_MISMATCH, NO_UNIT, NO_ERROR, ModbusError
 
 logger = getLogger("modbusclient")
 
+
 class Client(object):
     """Asynchronous Modbus client
 
@@ -40,7 +41,7 @@ class Client(object):
         # the call to get_event_loop used instead is apparently expensive.
         self._loop = loop
 
-        self._transactions = max_transactions * [None]
+        self._transactions = max_transactions * [(None, None)]
         self._read_lock = Lock()
 
     @property
@@ -138,20 +139,23 @@ class Client(object):
         elif transaction < 0 or transaction >= self.max_transactions:
             raise ValueError("Invalid transaction ID", transaction)
 
-        while self._transactions[transaction] is not None:
-            logger.debug("Awaiting completion of transaction %d ...", transaction)
-            await self._transactions[transaction]
+        while self._transactions[transaction][1] is not None:
+            logger.debug("Awaiting completion of transaction %d ...",
+                         transaction)
+            await self._transactions[transaction][1]
 
         header, msg = new_request(function=function,
                                   payload=payload,
                                   unit=unit,
                                   transaction=transaction,
                                   **kwargs)
-        logger.debug("Sending request with transaction ID %d ...", transaction)
         future = self.loop.create_future()
         try:
             self._writer.write(msg)
+            logger.debug("Sent request with transaction ID %d.", transaction)
         except Exception as exc:
+            logger.warn("Error sending request with transaction ID %d: %s",
+                         transaction, str(exc))
             future.set_exception(exc)
         self._transactions[transaction] = (header, future)
         return header, future
@@ -171,7 +175,7 @@ class Client(object):
             * The raw data bytes of the payload without any headers
             * An error code or ``None``, if no error occurred.
         """
-        self._logger.debug("Awaiting response ...")
+        logger.debug("Awaiting response ...")
         self.assert_connected()
         nbytes = ApplicationProtocolHeader.parser.size
 
@@ -181,7 +185,7 @@ class Client(object):
             header = parse_response_header(buffer)
             buffer = await self._reader.readexactly(header.length - 2)
         payload, err_code = parse_response_body(header, buffer)
-        self._logger.debug("Got response: %s, %s, %s", header, payload, err_code)
+        logger.debug("Got response: %s, %s, %s", header, payload, err_code)
 
         try:
             req, future = self._transactions[header.transaction]
@@ -200,8 +204,8 @@ class Client(object):
             else:
                 future.set_exception(ModbusError(err_code))
         else:
-            self._logger.error("Future for transaction %d already complete",
-                               header.transaction)
+            logger.error("Future for transaction %d already complete",
+                         header.transaction)
         return
 
     async def call(self, function, **kwargs):
@@ -258,11 +262,10 @@ class Client(object):
             int: Available transaction ID in the range
             ``[0:self.max_transactions]``.
         """
-        self._logger.debug("Generating transaction ID ..."),
+        logger.debug("Generating transaction ID ..."),
         while True:
             for i, (header, future) in enumerate(self._transactions):
                 if future is None:
                     return i
-            self._logger.debug("Max. transactions (%d) active",
-                               self.max_transactions),
+            logger.debug("Max. transactions (%d) active", self.max_transactions)
             await self.get_response()

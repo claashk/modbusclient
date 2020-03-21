@@ -23,18 +23,18 @@ class Client(object):
            is required.
 
     Attributes:
-        address (string): IP Adress of the host
+        host (string): IP Adress of the host
         port (int): Port to use. Defaults to 502
         timeout (int or None): Timeout in seconds
     """
-    def __init__(self, address="", port=DEFAULT_PORT, timeout=None, connect=True):
+    def __init__(self, host="", port=DEFAULT_PORT, timeout=None, connect=True):
         self._socket = None
 
-        self.address = address
+        self.host = host
         self.port = port
         self.timeout = timeout
 
-        if self.address and connect:
+        if self.host and connect:
             self.connect()
 
     def __enter__(self):
@@ -67,10 +67,10 @@ class Client(object):
                 :attr:`Client.timeout`
         """
         self.disconnect()
-        self.address = kwargs.get("address", self.address)
+        self.host = kwargs.get("address", self.host)
         self.port = kwargs.get("port", self.port)
         self.timeout = kwargs.get("timeout", self.timeout)
-        self._socket = socket.create_connection((self.address, self.port),
+        self._socket = socket.create_connection((self.host, self.port),
                                                 self.timeout)
 
     def disconnect(self):

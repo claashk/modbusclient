@@ -1,60 +1,77 @@
-from ..protocol import NO_UNIT, DEFAULT_PORT, ModbusError, ILLEGAL_FUNCTION_ERROR
-from ..payload import Payload
+from .protocol import NO_UNIT, DEFAULT_PORT
+from .error_codes import ModbusError
 from .client import Client
+from .payload import Payload
 
 from logging import getLogger
 
 logger = getLogger('modbusclient')
 
 
-class DefaultApi(object):
-    """Asynchronous API implementation
+class ApiWrapper(object):
+    """Default API implementation to quickly
 
     Arguments:
-        commands (dict): Dictionary containing the API definition. Should contain
+        api (dict): Dictionary containing the API definition. Should contain
             a string with desired method name as key and a
             :class:`~modbusclient.payload.Payload` object as value.
-        address (str): IP address of the server. Passed verbatim to
-            :class:`~modbusclient.asyncio.client.Client`
+        host (str): IP address of the server. Passed verbatim to
+            :class:`~modbusclient.client.Client`
         port (int): Port to connect to at the server. Passed verbatim to
-            :class:`~modbusclient.asyncio.client.Client`
+            :class:`~modbusclient.client.Client`
         timeout (int): Client timeout. Passed verbatim to
-            :class:`~modbusclient.asyncio.client.Client`
-        max_transactions (int): Maximum number of parallel transactions. Passed
-            verbatim to :class:`~modbusclient.asyncio.client.Client`.
-        unit (int): Modbus unit ID to use. Defaults to NO_UNIT.
+            :class:`~modbusclient.client.Client`
+        connect (bool): Connect to the client. Defaults to `False`. Passed
+             verbatim to :class:`~modbusclient.client.Client`
 
     Attributes:
         unit (int): Modbus unit ID: Defaults to NO_UNIT.
     """
     def __init__(self,
-                 commands,
-                 address="",
+                 api=dict(),
+                 host="",
                  port=DEFAULT_PORT,
                  timeout=None,
-                 max_transactions=3,
+                 connect=False,
                  unit=NO_UNIT):
-        self._api = commands
-        self._client = Client(address=address,
-                              port=port,
-                              timeout=timeout,
-                              max_transactions=max_transactions)
-        self.unit = unit
+        self.__dict__['_api'] = api
+        self.__dict__['_client'] = Client(host=host,
+                                          port=port,
+                                          timeout=timeout,
+                                          connect=connect)
+        self.__dict__['unit'] = unit
 
-    async def __aenter__(self):
+    def __enter__(self):
         """Context Manager support
 
         Connects to the server if not already connected.
         """
-        await self._client.__aenter__()
+        self._client.__enter__()
+        return self
 
-    async def _aexit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback):
         """Context Manager support
 
         Logs out and disconnects from the server.
         """
         self.logout()
         self.disconnect()
+
+    def __getattr__(self, item):
+        """Get value of a single message
+
+        Return:
+            value: Value of message
+        """
+        return self.get(self._api[item])
+
+    def __setattr__(self, key, value):
+        """Set value of a single message
+
+        Return:
+            value: Value of message
+        """
+        self.set(self._api[key], value)
 
     def is_connected(self):
         """Check if this client is connected to a server
@@ -64,7 +81,7 @@ class DefaultApi(object):
         """
         return self._client.is_connected()
 
-    async def connect(self, **kwargs):
+    def connect(self, **kwargs):
         """Connect this client to a host
 
         Arguments:
@@ -73,7 +90,7 @@ class DefaultApi(object):
             timeout (float): Timeout in seconds. If not set, it will be set to
                the default timeout.
         """
-        await self._client.connect(**kwargs)
+        self._client.connect(**kwargs)
 
     def disconnect(self):
         """Disconnect this client
@@ -100,12 +117,12 @@ class DefaultApi(object):
         """
         return
 
-    async def get(self, message):
+    def get(self, message):
         """Get value of a single message
 
         Arguments:
-            message (:class:`~modbusclient.payload.Payload` or str): Message to
-                read from remote device. If this is not a
+            message (:class:`~modbusclient.payload.Payload` or str): Message
+                to read from remote device. If this is not a
                 :class:`~modbusclient.payload.Payload` instance, the api
                 dictionary will be used with `message` as key to lookup the
                 payload.
@@ -116,21 +133,22 @@ class DefaultApi(object):
         if not isinstance(message, Payload):
             message = self._api[message]
 
-        header, payload, err_code = await self._client.call(
+        header, payload, err_code = self._client.call(
             function=message.reader,
             start=message.address,
             count=message.register_count,
             unit=self.unit,
             transaction=0)
-
+        if err_code:
+            raise ModbusError(err_code)
         return message.decode(payload)
 
-    async def set(self, message, value):
+    def set(self, message, value):
         """Set value of a single message
 
         Arguments:
-            message (:class:`~modbusclient.payload.Payload` or str): Message
-                to write to remote device. If this is not a
+            message (:class:`~modbusclient.payload.Payload`): Message to write to
+                remote device. If this is not a
                 :class:`~modbusclient.payload.Payload` instance, the api
                 dictionary will be used with `message` as key to lookup the
                 payload.
@@ -142,27 +160,26 @@ class DefaultApi(object):
         if not isinstance(message, Payload):
             message = self._api[message]
 
-        try:
-            header, payload, err_code = await self._client.call(
-                function=message.writer,
-                start=message.address,
-                count=message.register_count,
-                payload=message.encode(value),
-                unit=self.unit,
-                transaction=0)
-        except ModbusError as ex:
-            err_code = ex.args[0]
-            if err_code == ILLEGAL_FUNCTION_ERROR:
+        header, payload, err_code = self._client.call(
+            function=message.writer,
+            start=message.address,
+            count=message.register_count,
+            payload=message.encode(value),
+            unit=self.unit,
+            transaction=0)
+
+        if err_code:
+            if err_code == 1:
                 if not message.is_writable:
                     raise ModbusError(err_code, "Message is read only")
 
                 if message.is_write_protected and not self.is_logged_in():
                     raise ModbusError(err_code,
                                       "Login required to modify this message")
-            raise
+            raise ModbusError(err_code)
         return header
 
-    async def save(self, selection=None):
+    def save(self, selection=None):
         """Save current settings into dictionary
 
         Arguments:
@@ -176,10 +193,13 @@ class DefaultApi(object):
         if selection is None:
             selection = self._api.keys()
         for msg in selection:
-            retval[msg] = await self.get(msg)
+            try:
+                retval[msg] = self.get(msg)
+            except Exception as exc:
+                logger.error("While retrieving %s: %s", msg, exc)
         return retval
 
-    async def load(self, settings):
+    def load(self, settings):
         """Load settings from dictionary
 
         Arguments:
@@ -193,7 +213,7 @@ class DefaultApi(object):
             msg = self._api[key]
             if msg.is_writable:
                 try:
-                    await self.set(msg, value)
+                    self.set(msg, value)
                     retval.append(msg)
                 except Exception as ex:
                     logger.error("While setting message %s: %s", key, ex)

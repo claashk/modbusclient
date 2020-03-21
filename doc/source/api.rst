@@ -10,7 +10,7 @@ key (such as the numeric message ID or a string) as key and a
 Default API Template
 ====================
 
-.. autoclass:: modbusclient.api.DefaultApi
+.. autoclass:: modbusclient.api.ApiWrapper
    :members:
    :special-members: __enter__, __exit__
    :no-undoc-members:
@@ -18,7 +18,7 @@ Default API Template
 Asynchronous API Template
 =========================
 
-.. autoclass:: modbusclient.asyncio.api.DefaultApi
+.. autoclass:: modbusclient.asyncio.api.ApiWrapper
    :members:
    :special-members: __aenter__, __aexit__
    :no-undoc-members:

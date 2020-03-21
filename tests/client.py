@@ -28,12 +28,12 @@ class ClientTestCase(unittest.TestCase):
 
         client = Client(self.ip, self.port, self.timeout, connect=False)
         self.assertFalse(client.is_connected())
-        self.assertEqual(self.ip, client.address)
+        self.assertEqual(self.ip, client.host)
         self.assertEqual(self.port, client.port)
         self.assertEqual(self.timeout, client.timeout)
 
         client = Client(self.ip, self.port, self.timeout)
-        self.assertEqual(self.ip, client.address)
+        self.assertEqual(self.ip, client.host)
         self.assertEqual(self.port, client.port)
         self.assertEqual(self.timeout, client.timeout)
         self.assertTrue(client.is_connected())
