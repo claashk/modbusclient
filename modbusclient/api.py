@@ -1,7 +1,11 @@
 from .protocol import NO_UNIT, DEFAULT_PORT
 from .error_codes import ModbusError
 from .client import Client
+from .payload import Payload
 
+from logging import getLogger
+
+logger = getLogger('modbusclient')
 
 class DefaultApi(object):
     """Default API implementation to quickly
@@ -116,12 +120,18 @@ class DefaultApi(object):
         """Get value of a single message
 
         Arguments:
-            message (:class:`~modbusclient.payload.Payload`): Message (payload)
-                to read from remote device
+            message (:class:`~modbusclient.payload.Payload` or str): Message
+                to read from remote device. If this is not a
+                :class:`~modbusclient.payload.Payload` instance, the api
+                dictionary will be used with `message` as key to lookup the
+                payload.
 
         Return:
             value: Value of message
         """
+        if not isinstance(message, Payload):
+            message = self._api[message]
+
         header, payload, err_code = self._client.call(
             function=message.reader,
             start=message.address,
@@ -136,13 +146,19 @@ class DefaultApi(object):
         """Set value of a single message
 
         Arguments:
-            message (:class:`~modbusclient.payload.Payload`): Message (payload)
-                to write to remote device
+            message (:class:`~modbusclient.payload.Payload`): Message to write to
+                remote device. If this is not a
+                :class:`~modbusclient.payload.Payload` instance, the api
+                dictionary will be used with `message` as key to lookup the
+                payload.
             value (object): Value to set for this message.
 
         Return:
             value: Value of message
         """
+        if not isinstance(message, Payload):
+            message = self._api[message]
+
         header, payload, err_code = self._client.call(
             function=message.writer,
             start=message.address,
@@ -166,15 +182,15 @@ class DefaultApi(object):
         """Save current settings into dictionary
 
         Arguments:
-            selection (iterable): Iterable of messages to save. If None, all
-                messages are backed up
+            selection (iterable): Iterable of messages (API keys) to save. If
+                ``None``, all messages of the current API are backed up.
 
         Return:
-            dict: Dictionary containing message as key and setting as value
+            dict: Dictionary containing API message key and setting as value
         """
-        if selection is None:
-            return
         retval = dict()
+        if selection is None:
+            selection = self._api.keys()
         for msg in selection:
             retval[msg] = self.get(msg)
         return retval
@@ -184,16 +200,19 @@ class DefaultApi(object):
 
         Arguments:
             settings (dict): Dictionary with settings as returned by
-                 :meth:`~sma.Client.save`
+                 :meth:`~Client.save`
         Return:
             list: Successfully modified settings
         """
         retval = []
-        for msg, value in settings.items():
+        for key, value in settings.items():
+            msg = self._api[key]
             if msg.is_writable:
                 try:
                     self.set(msg, value)
                     retval.append(msg)
+                except Exception as ex:
+                    logger.error("While setting message %s: %s", key, ex)
                 except:
-                    pass
+                    logger.error("While setting message %s: Unknown error", key)
         return retval
