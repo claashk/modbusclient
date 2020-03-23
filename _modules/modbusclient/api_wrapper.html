@@ -1,0 +1,453 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>modbusclient.api_wrapper &mdash; modbusclient  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="modbusclient  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> modbusclient
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Templates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html#default-api-template">Default API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html#asynchronous-api-template">Asynchronous API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocol.html">The Modbus Protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocol.html#protocol-implementation">Protocol Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html">User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html#payload-types">Payload Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html#data-types">Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html">Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html#default-client">Default Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html#asynchronous-client">Asynchronous Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wamp.html">WAMP Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wamp.html#base-class-for-wamp-components">Base Class for WAMP Components</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">modbusclient</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>modbusclient.api_wrapper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for modbusclient.api_wrapper</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.protocol</span> <span class="k">import</span> <span class="n">NO_UNIT</span><span class="p">,</span> <span class="n">DEFAULT_PORT</span>
+<span class="kn">from</span> <span class="nn">.error_codes</span> <span class="k">import</span> <span class="n">ModbusError</span>
+<span class="kn">from</span> <span class="nn">.client</span> <span class="k">import</span> <span class="n">Client</span>
+<span class="kn">from</span> <span class="nn">.payload</span> <span class="k">import</span> <span class="n">Payload</span>
+
+<span class="kn">from</span> <span class="nn">logging</span> <span class="k">import</span> <span class="n">getLogger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;modbusclient&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ApiWrapper"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper">[docs]</a><span class="k">class</span> <span class="nc">ApiWrapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Default API implementation to quickly</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        api (dict): Dictionary containing the API definition. Should contain</span>
+<span class="sd">            a string with desired method name as key and a</span>
+<span class="sd">            :class:`~modbusclient.payload.Payload` object as value.</span>
+<span class="sd">        host (str): IP address of the server. Passed verbatim to</span>
+<span class="sd">            :class:`~modbusclient.client.Client`</span>
+<span class="sd">        port (int): Port to connect to at the server. Passed verbatim to</span>
+<span class="sd">            :class:`~modbusclient.client.Client`</span>
+<span class="sd">        timeout (int): Client timeout. Passed verbatim to</span>
+<span class="sd">            :class:`~modbusclient.client.Client`</span>
+<span class="sd">        connect (bool): Connect to the client. Defaults to `False`. Passed</span>
+<span class="sd">             verbatim to :class:`~modbusclient.client.Client`</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        unit (int): Modbus unit ID: Defaults to NO_UNIT.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">api</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
+                 <span class="n">host</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                 <span class="n">port</span><span class="o">=</span><span class="n">DEFAULT_PORT</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">connect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">unit</span><span class="o">=</span><span class="n">NO_UNIT</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;_api&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;_client&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+                                          <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span>
+                                          <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                                          <span class="n">connect</span><span class="o">=</span><span class="n">connect</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;unit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unit</span>
+
+<div class="viewcode-block" id="ApiWrapper.__enter__"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.__enter__">[docs]</a>    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Context Manager support</span>
+
+<span class="sd">        Connects to the server if not already connected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.__exit__"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.__exit__">[docs]</a>    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Context Manager support</span>
+
+<span class="sd">        Logs out and disconnects from the server.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get value of a single message</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            value: Value of message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_api</span><span class="p">[</span><span class="n">item</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set value of a single message</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            value: Value of message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_api</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ApiWrapper.is_connected"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.is_connected">[docs]</a>    <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if this client is connected to a server</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: True if and only if this client is connected to a server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.connect"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Connect this client to a host</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            address (string): IP Adress of the host</span>
+<span class="sd">            port (int): Port to use. Defaults to 502</span>
+<span class="sd">            timeout (float): Timeout in seconds. If not set, it will be set to</span>
+<span class="sd">               the default timeout.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.disconnect"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Disconnect this client</span>
+
+<span class="sd">        If this client is connected, the socket will be shutdown and then closed.</span>
+<span class="sd">        If the client is not connected, calling this method has no effect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.is_logged_in"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.is_logged_in">[docs]</a>    <span class="k">def</span> <span class="nf">is_logged_in</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if this client is currently logged in</span>
+
+<span class="sd">        Intended to be implemented by derived class, if applicable</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.logout"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.logout">[docs]</a>    <span class="k">def</span> <span class="nf">logout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Log out client</span>
+
+<span class="sd">        This is a stub. Intended to be implemented by derived classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.get"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get value of a single message</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            message (:class:`~modbusclient.payload.Payload` or str): Message</span>
+<span class="sd">                to read from remote device. If this is not a</span>
+<span class="sd">                :class:`~modbusclient.payload.Payload` instance, the api</span>
+<span class="sd">                dictionary will be used with `message` as key to lookup the</span>
+<span class="sd">                payload.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            value: Value of message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">Payload</span><span class="p">):</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api</span><span class="p">[</span><span class="n">message</span><span class="p">]</span>
+
+        <span class="n">header</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">err_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
+            <span class="n">function</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">reader</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">address</span><span class="p">,</span>
+            <span class="n">count</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">register_count</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+            <span class="n">transaction</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err_code</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ModbusError</span><span class="p">(</span><span class="n">err_code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">message</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.set"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.set">[docs]</a>    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set value of a single message</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            message (:class:`~modbusclient.payload.Payload`): Message to write to</span>
+<span class="sd">                remote device. If this is not a</span>
+<span class="sd">                :class:`~modbusclient.payload.Payload` instance, the api</span>
+<span class="sd">                dictionary will be used with `message` as key to lookup the</span>
+<span class="sd">                payload.</span>
+<span class="sd">            value (object): Value to set for this message.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            value: Value of message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">Payload</span><span class="p">):</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api</span><span class="p">[</span><span class="n">message</span><span class="p">]</span>
+
+        <span class="n">header</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">err_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
+            <span class="n">function</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">writer</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">address</span><span class="p">,</span>
+            <span class="n">count</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">register_count</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+            <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+            <span class="n">transaction</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">err_code</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">err_code</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">message</span><span class="o">.</span><span class="n">is_writable</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ModbusError</span><span class="p">(</span><span class="n">err_code</span><span class="p">,</span> <span class="s2">&quot;Message is read only&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">is_write_protected</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_logged_in</span><span class="p">():</span>
+                    <span class="k">raise</span> <span class="n">ModbusError</span><span class="p">(</span><span class="n">err_code</span><span class="p">,</span>
+                                      <span class="s2">&quot;Login required to modify this message&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ModbusError</span><span class="p">(</span><span class="n">err_code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">header</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.save"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save current settings into dictionary</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            selection (iterable): Iterable of messages (API keys) to save. If</span>
+<span class="sd">                ``None``, all messages of the current API are backed up.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            dict: Dictionary containing API message key and setting as value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">selection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">retval</span><span class="p">[</span><span class="n">msg</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;While retrieving </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">retval</span></div>
+
+<div class="viewcode-block" id="ApiWrapper.load"><a class="viewcode-back" href="../../api.html#modbusclient.api_wrapper.ApiWrapper.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load settings from dictionary</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            settings (dict): Dictionary with settings as returned by</span>
+<span class="sd">                 :meth:`~Client.save`</span>
+<span class="sd">        Return:</span>
+<span class="sd">            list: Successfully modified settings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">is_writable</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="n">retval</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;While setting message </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">ex</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;While setting message </span><span class="si">%s</span><span class="s2">: Unknown error&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">retval</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, claashk.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

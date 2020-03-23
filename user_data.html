@@ -1,0 +1,1102 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>User Data &mdash; modbusclient  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="modbusclient  documentation" href="index.html"/>
+        <link rel="prev" title="The Modbus Protocol" href="protocol.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> modbusclient
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="protocol.html">The Modbus Protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="protocol.html#protocol-implementation">Protocol Implementation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#payload-types">Payload Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#payload-base">Payload Base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fixpoint-floating-point">Fixpoint Floating Point</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enumeration-type">Enumeration Type</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#data-types">Data Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#base-class-for-data-types">Base Class for Data Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#numeric-types">Numeric Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#string-types">String Types</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">modbusclient</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>User Data</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/user_data.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="user-data">
+<h1>User Data<a class="headerlink" href="#user-data" title="Permalink to this headline">¶</a></h1>
+<p>The handling of user data is not specified by the Modbus protocol. In principle,
+any sequence of bytes can be sent as payload. In order to support a variety of
+use cases, there exist two building blocks for user data:</p>
+<ul class="simple">
+<li>Class (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataType</span></code>) and derived classes implement
+the actual storage layout of the payload, including the translation from and
+to byte sequences.</li>
+<li>Class <a class="reference internal" href="#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> and classes derived from it wrap a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DataType</span></code> to provide a generic interface to
+store metadata and to perform scaling.</li>
+</ul>
+<p>The payload types are implemented in chapter <a class="reference internal" href="#payload-types">Payload Types</a>.</p>
+</div>
+<div class="section" id="payload-types">
+<h1>Payload Types<a class="headerlink" href="#payload-types" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="payload-base">
+<h2>Payload Base<a class="headerlink" href="#payload-base" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="modbusclient.payload.Payload">
+<em class="property">class </em><code class="descclassname">modbusclient.payload.</code><code class="descname">Payload</code><span class="sig-paren">(</span><em>dtype</em>, <em>address</em>, <em>name=''</em>, <em>mode='r'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Payload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.payload.Payload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Payload parser</p>
+<p>Small wrapper around parser objects to simplify payload definition. The
+actual parser is passed as argument <cite>dtype</cite> and has to provide</p>
+<ul class="simple">
+<li>a method <code class="docutils literal notranslate"><span class="pre">encode</span></code> to encode python objects to bytes</li>
+<li>a method <code class="docutils literal notranslate"><span class="pre">decode</span></code> to convert bytes to python objects</li>
+<li>a <code class="docutils literal notranslate"><span class="pre">__len__</span></code> implementation returning the number of bytes required in the
+encoded string.</li>
+</ul>
+<p>For examples of compatible parser implementations refer to the <cite>data_types</cite>
+module.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dtype</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – Datatype object capable of converting from python object
+to bytes and back. Must provide methods <code class="docutils literal notranslate"><span class="pre">encode</span></code> and <code class="docutils literal notranslate"><span class="pre">decode</span></code>.</li>
+<li><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Starting address (register number) of the message</li>
+<li><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Permissible read write modes. Defaults to read only (<code class="docutils literal notranslate"><span class="pre">'r'</span></code>)</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Optional name. Defaults to <code class="docutils literal notranslate"><span class="pre">''</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="modbusclient.payload.Payload.__eq__">
+<code class="descname">__eq__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Payload.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.payload.Payload.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equality comparison</p>
+<p>Two messages are considered equal, if and only if their addresses match.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code>) – Payload to compare to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">True</span></code> if and only if the addresses of both messages are
+equal.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.payload.Payload.__hash__">
+<code class="descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Payload.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.payload.Payload.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get hash of this Message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">equivalent of <code class="docutils literal notranslate"><span class="pre">hash(self.address)</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.payload.Payload.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Payload.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.payload.Payload.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get length of this message in bytes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of bytes required by this message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.payload.Payload.__ne__">
+<code class="descname">__ne__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Payload.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.payload.Payload.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inequality comparison</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code>) – Payload to compare to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">False</span></code> if and only if the addresses of both messages are
+equal.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.payload.Payload.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Payload.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.payload.Payload.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.payload.Payload.address">
+<code class="descname">address</code><a class="headerlink" href="#modbusclient.payload.Payload.address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get address (numeric ID) of this message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(starting) address of this message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.payload.Payload.decode">
+<code class="descname">decode</code><span class="sig-paren">(</span><em>buffer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Payload.decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.payload.Payload.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert bytes from binary modbus representation into variable</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>buffer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)"><em>bytes</em></a>) – Data in packed binary format</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Python representation of the data</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)">object</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.payload.Payload.encode">
+<code class="descname">encode</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Payload.encode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.payload.Payload.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a value to binary modbus representation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – Python variable to encode</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Packed binary version of :value:</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)">bytes</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.payload.Payload.is_writable">
+<code class="descname">is_writable</code><a class="headerlink" href="#modbusclient.payload.Payload.is_writable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if this message is writable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.payload.Payload.is_write_protected">
+<code class="descname">is_write_protected</code><a class="headerlink" href="#modbusclient.payload.Payload.is_write_protected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if message requires Grid guard code to be written</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if and only if this message is writable with special
+permissions only.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.payload.Payload.name">
+<code class="descname">name</code><a class="headerlink" href="#modbusclient.payload.Payload.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name of this payload</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">User defined descriptive name of the payload</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.payload.Payload.register_count">
+<code class="descname">register_count</code><a class="headerlink" href="#modbusclient.payload.Payload.register_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get number of registers used by this parser</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of 2-byte registers used by this parser</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="fixpoint-floating-point">
+<h2>Fixpoint Floating Point<a class="headerlink" href="#fixpoint-floating-point" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="modbusclient.Fixpoint">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">Fixpoint</code><span class="sig-paren">(</span><em>dtype</em>, <em>address</em>, <em>name=''</em>, <em>mode='r'</em>, <em>digits=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Fixpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.Fixpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">modbusclient.payload.Payload</span></code></a></p>
+<p>Specialisation of :class:´~modbus.sma.Message` for fixed point floats</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>(</strong><strong>)</strong> (<em>dtype</em>) – </td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="modbusclient.Fixpoint.__eq__">
+<code class="descname">__eq__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Fixpoint.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equality comparison</p>
+<p>Two messages are considered equal, if and only if their addresses match.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code>) – Payload to compare to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">True</span></code> if and only if the addresses of both messages are
+equal.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Fixpoint.__hash__">
+<code class="descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Fixpoint.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get hash of this Message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">equivalent of <code class="docutils literal notranslate"><span class="pre">hash(self.address)</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Fixpoint.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Fixpoint.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get length of this message in bytes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of bytes required by this message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Fixpoint.__ne__">
+<code class="descname">__ne__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Fixpoint.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inequality comparison</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code>) – Payload to compare to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">False</span></code> if and only if the addresses of both messages are
+equal.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Fixpoint.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Fixpoint.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Fixpoint.address">
+<code class="descname">address</code><a class="headerlink" href="#modbusclient.Fixpoint.address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get address (numeric ID) of this message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(starting) address of this message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Fixpoint.decode">
+<code class="descname">decode</code><span class="sig-paren">(</span><em>bytes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Fixpoint.decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.Fixpoint.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert bytes from binary modbus representation into variable</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>buffer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)"><em>bytes</em></a>) – Data in packed binary format</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Python representation of the data</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)">object</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Fixpoint.encode">
+<code class="descname">encode</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Fixpoint.encode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.Fixpoint.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a value to binary modbus representation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – Python variable to encode</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Packed binary version of :value:</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)">bytes</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Fixpoint.is_writable">
+<code class="descname">is_writable</code><a class="headerlink" href="#modbusclient.Fixpoint.is_writable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if this message is writable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Fixpoint.is_write_protected">
+<code class="descname">is_write_protected</code><a class="headerlink" href="#modbusclient.Fixpoint.is_write_protected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if message requires Grid guard code to be written</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if and only if this message is writable with special
+permissions only.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Fixpoint.name">
+<code class="descname">name</code><a class="headerlink" href="#modbusclient.Fixpoint.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name of this payload</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">User defined descriptive name of the payload</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Fixpoint.register_count">
+<code class="descname">register_count</code><a class="headerlink" href="#modbusclient.Fixpoint.register_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get number of registers used by this parser</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of 2-byte registers used by this parser</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="enumeration-type">
+<h2>Enumeration Type<a class="headerlink" href="#enumeration-type" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="modbusclient.Enum">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">Enum</code><span class="sig-paren">(</span><em>dtype</em>, <em>address</em>, <em>name=''</em>, <em>choices=None</em>, <em>mode='r'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/payload.html#Enum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.Enum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">modbusclient.payload.Payload</span></code></a></p>
+<p>Specialisation for enumeration messages</p>
+<p>Accepts an additional dictionary as argument, which relates the keys to
+a string describing the meaning.</p>
+<p>Arguments:</p>
+<dl class="method">
+<dt id="modbusclient.Enum.__eq__">
+<code class="descname">__eq__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Enum.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equality comparison</p>
+<p>Two messages are considered equal, if and only if their addresses match.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code>) – Payload to compare to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">True</span></code> if and only if the addresses of both messages are
+equal.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Enum.__hash__">
+<code class="descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Enum.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get hash of this Message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">equivalent of <code class="docutils literal notranslate"><span class="pre">hash(self.address)</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Enum.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Enum.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get length of this message in bytes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of bytes required by this message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Enum.__ne__">
+<code class="descname">__ne__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Enum.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inequality comparison</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code>) – Payload to compare to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">False</span></code> if and only if the addresses of both messages are
+equal.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Enum.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Enum.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Enum.address">
+<code class="descname">address</code><a class="headerlink" href="#modbusclient.Enum.address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get address (numeric ID) of this message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(starting) address of this message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Enum.decode">
+<code class="descname">decode</code><span class="sig-paren">(</span><em>buffer</em><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Enum.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert bytes from binary modbus representation into variable</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>buffer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)"><em>bytes</em></a>) – Data in packed binary format</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Python representation of the data</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)">object</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.Enum.encode">
+<code class="descname">encode</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.Enum.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a value to binary modbus representation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – Python variable to encode</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Packed binary version of :value:</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)">bytes</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Enum.is_writable">
+<code class="descname">is_writable</code><a class="headerlink" href="#modbusclient.Enum.is_writable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if this message is writable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Enum.is_write_protected">
+<code class="descname">is_write_protected</code><a class="headerlink" href="#modbusclient.Enum.is_write_protected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if message requires Grid guard code to be written</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if and only if this message is writable with special
+permissions only.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Enum.name">
+<code class="descname">name</code><a class="headerlink" href="#modbusclient.Enum.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name of this payload</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">User defined descriptive name of the payload</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.Enum.register_count">
+<code class="descname">register_count</code><a class="headerlink" href="#modbusclient.Enum.register_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get number of registers used by this parser</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of 2-byte registers used by this parser</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="data-types">
+<h1>Data Types<a class="headerlink" href="#data-types" title="Permalink to this headline">¶</a></h1>
+<p>This implementation provides several basic datatypes, which can be wrapped in a
+<a class="reference internal" href="#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> object.</p>
+<div class="section" id="base-class-for-data-types">
+<h2>Base Class for Data Types<a class="headerlink" href="#base-class-for-data-types" title="Permalink to this headline">¶</a></h2>
+<p>The data type class is a base class for datatypes, which provides an interface
+compatible with ``</p>
+<dl class="class">
+<dt id="modbusclient.DataType">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">DataType</code><span class="sig-paren">(</span><em>format</em>, <em>nan=None</em>, <em>swap_words=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/data_types.html#DataType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.DataType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for data type objects</p>
+<p>Base class for objects to be used as parser in combination with
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code> objects. This base wraps a
+<a class="reference external" href="https://docs.python.org/3/library/struct.html#struct.Struct" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a> parser for the conversion between python objects and
+binary strings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Format definition as used by <a class="reference external" href="https://docs.python.org/3/library/struct.html#struct.Struct" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a>. If</li>
+<li><strong>leading exclamation mark</strong> (<em>the</em>) – </li>
+<li><strong>byte order marks have to be specified explicitly.</strong> (<em>Other</em>) – </li>
+<li><strong>nan</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – NAN value to use for this object.</li>
+<li><strong>swap_words</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – Swap registers (DWORDS) before conversion. This may</li>
+<li><strong>necessary depending on the memory layout used by the application</strong><strong>,</strong> (<em>be</em>) – </li>
+<li><strong>MODBUS does not define</strong><strong>, </strong><strong>how multi-word data types are distributed</strong> (<em>since</em>) – </li>
+<li><strong>various registers. Defaults to False.</strong> (<em>over</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="modbusclient.DataType.__delattr__">
+<code class="descname">__delattr__</code><a class="headerlink" href="#modbusclient.DataType.__delattr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement delattr(self, name).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__dir__">
+<code class="descname">__dir__</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list<a class="headerlink" href="#modbusclient.DataType.__dir__" title="Permalink to this definition">¶</a></dt>
+<dd><p>default dir() implementation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__eq__">
+<code class="descname">__eq__</code><a class="headerlink" href="#modbusclient.DataType.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__format__">
+<code class="descname">__format__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.DataType.__format__" title="Permalink to this definition">¶</a></dt>
+<dd><p>default object formatter</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__ge__">
+<code class="descname">__ge__</code><a class="headerlink" href="#modbusclient.DataType.__ge__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self&gt;=value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__getattribute__">
+<code class="descname">__getattribute__</code><a class="headerlink" href="#modbusclient.DataType.__getattribute__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return getattr(self, name).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__gt__">
+<code class="descname">__gt__</code><a class="headerlink" href="#modbusclient.DataType.__gt__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self&gt;value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__hash__">
+<code class="descname">__hash__</code><a class="headerlink" href="#modbusclient.DataType.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>format</em>, <em>nan=None</em>, <em>swap_words=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/data_types.html#DataType.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.DataType.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__init_subclass__">
+<code class="descname">__init_subclass__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.DataType.__init_subclass__" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called when a class is subclassed.</p>
+<p>The default implementation does nothing. It may be
+overridden to extend subclasses.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__le__">
+<code class="descname">__le__</code><a class="headerlink" href="#modbusclient.DataType.__le__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self&lt;=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/data_types.html#DataType.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.DataType.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get length of this message in bytes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of bytes required by this message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__lt__">
+<code class="descname">__lt__</code><a class="headerlink" href="#modbusclient.DataType.__lt__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self&lt;value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__ne__">
+<code class="descname">__ne__</code><a class="headerlink" href="#modbusclient.DataType.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__new__">
+<code class="descname">__new__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.DataType.__new__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and return a new object.  See help(type) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__reduce__">
+<code class="descname">__reduce__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.DataType.__reduce__" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper for pickle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__reduce_ex__">
+<code class="descname">__reduce_ex__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.DataType.__reduce_ex__" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper for pickle</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__repr__">
+<code class="descname">__repr__</code><a class="headerlink" href="#modbusclient.DataType.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__setattr__">
+<code class="descname">__setattr__</code><a class="headerlink" href="#modbusclient.DataType.__setattr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement setattr(self, name, value).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__sizeof__">
+<code class="descname">__sizeof__</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#modbusclient.DataType.__sizeof__" title="Permalink to this definition">¶</a></dt>
+<dd><p>size of object in memory, in bytes</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__str__">
+<code class="descname">__str__</code><a class="headerlink" href="#modbusclient.DataType.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.DataType.__subclasshook__">
+<code class="descname">__subclasshook__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modbusclient.DataType.__subclasshook__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract classes can override this to customize issubclass().</p>
+<p>This is invoked early on by abc.ABCMeta.__subclasscheck__().
+It should return True, False or NotImplemented.  If it returns
+NotImplemented, the normal algorithm is used.  Otherwise, it
+overrides the normal algorithm (and the outcome is cached).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.DataType.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#modbusclient.DataType.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="numeric-types">
+<h2>Numeric Types<a class="headerlink" href="#numeric-types" title="Permalink to this headline">¶</a></h2>
+<p>An data type intended for atomic numeric types such as integers or floats of
+varying precision.</p>
+<dl class="class">
+<dt id="modbusclient.AtomicType">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">AtomicType</code><span class="sig-paren">(</span><em>format</em>, <em>nan=None</em>, <em>swap_words=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/data_types.html#AtomicType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.AtomicType" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper for Atomic datatypes which maps NaN to None</p>
+<p>Identical to <a class="reference internal" href="#modbusclient.DataType" title="modbusclient.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataType</span></code></a>, except that NaN will be mapped
+to <code class="docutils literal notranslate"><span class="pre">None</span></code> when parsing bytes.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="string-types">
+<h2>String Types<a class="headerlink" href="#string-types" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="modbusclient.String">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">String</code><span class="sig-paren">(</span><em>len</em>, <em>encoding='utf8'</em>, <em>swap_words=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/data_types.html#String"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.String" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parser for strings with configurable encoding</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>len</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Length of the string in bytes</li>
+<li><strong>encoding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Encoding. Defaults to ‘utf8’</li>
+<li><strong>swap_words</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="protocol.html" class="btn btn-neutral" title="The Modbus Protocol" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, claashk.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

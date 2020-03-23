@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>WAMP Client &mdash; modbusclient  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="modbusclient  documentation" href="index.html"/>
+        <link rel="prev" title="Clients" href="client.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> modbusclient
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Templates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#default-api-template">Default API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#asynchronous-api-template">Asynchronous API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="protocol.html">The Modbus Protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="protocol.html#protocol-implementation">Protocol Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html">User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html#payload-types">Payload Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html#data-types">Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#default-client">Default Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#asynchronous-client">Asynchronous Client</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">WAMP Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#base-class-for-wamp-components">Base Class for WAMP Components</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">modbusclient</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>WAMP Client</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/wamp.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="wamp-client">
+<h1>WAMP Client<a class="headerlink" href="#wamp-client" title="Permalink to this headline">¶</a></h1>
+<p>In order to use an asynchronous Modbus Client as WAMP component, there exists
+a thin wrapper around the API baseclass, which turns the API implementation into
+a WAMP component. The wrapper uses the Autobahn WAMP framework, which allows to
+integrate seamlessly with the crossbar.io router, which supports WAMP and
+MQTT environments out of the box.</p>
+</div>
+<div class="section" id="base-class-for-wamp-components">
+<h1>Base Class for WAMP Components<a class="headerlink" href="#base-class-for-wamp-components" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="modbusclient.asyncio.autobahn.ComponentBase">
+<em class="property">class </em><code class="descclassname">modbusclient.asyncio.autobahn.</code><code class="descname">ComponentBase</code><span class="sig-paren">(</span><em>transports</em>, <em>realm</em>, <em>client</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/autobahn.html#ComponentBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.autobahn.ComponentBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for WAMP components</p>
+<p>This class provides a template to turn an asynchronous Modbus client into a
+WAMP client using the Autobahn package. Provided you have an API client
+derived from  <code class="xref py py-class docutils literal notranslate"><span class="pre">modbusclient.asyncio.ApiWrapper</span></code>, you can use this
+class as base class for your WAMP client and provice the API client
+as <cite>client</cite> argument. This avoids the repetition of some boiler plate code.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>transports</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Passed verbatim to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">autobahn.asyncio.component.Component</span></code> as <cite>transports</cite>.</li>
+<li><strong>realm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – WAMP realm. Passed verbatim to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">autobahn.asyncio.component.Component</span></code> as <cite>realm</cite>.</li>
+<li><strong>client</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">modbusclient.asyncio.ApiWrapper</span></code>) – An implementation of
+an API wrapper.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="modbusclient.asyncio.autobahn.ComponentBase.component">
+<code class="descname">component</code><a class="headerlink" href="#modbusclient.asyncio.autobahn.ComponentBase.component" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">autobahn.asyncio.component.Component</span></code> – Autobahn
+WAMP component wrapped by this class</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.asyncio.autobahn.ComponentBase.session">
+<code class="descname">session</code><a class="headerlink" href="#modbusclient.asyncio.autobahn.ComponentBase.session" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">autobahn.wamp.protocol.ApplicationSession</span></code> – Session
+passed during on_join. <code class="docutils literal notranslate"><span class="pre">None</span></code> if client has not joined any session.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">component</code></dt>
+<dd><p>Get component wrapped by this instance</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Autobahn
+WAMP component wrapped by this class</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">autobahn.asyncio.component.Component</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.autobahn.ComponentBase.debug">
+<code class="descname">debug</code><span class="sig-paren">(</span><em>msg</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/autobahn.html#ComponentBase.debug"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.autobahn.ComponentBase.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create debug level log message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Log message.</li>
+<li><strong>**kwargs</strong> – Keyword arguments passed to message formatter</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.autobahn.ComponentBase.error">
+<code class="descname">error</code><span class="sig-paren">(</span><em>msg</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/autobahn.html#ComponentBase.error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.autobahn.ComponentBase.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create error level log message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Log message.</li>
+<li><strong>**kwargs</strong> – Keyword arguments passed to message formatter</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.autobahn.ComponentBase.info">
+<code class="descname">info</code><span class="sig-paren">(</span><em>msg</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/autobahn.html#ComponentBase.info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.autobahn.ComponentBase.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create info level log message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Log message.</li>
+<li><strong>**kwargs</strong> – Keyword arguments passed to message formatter</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">session</code></dt>
+<dd><p>Get currently joined session</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>Session passed</dt>
+<dd>during on_join. <code class="docutils literal notranslate"><span class="pre">None</span></code> if client is currently not joined to
+any session.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">autobahn.wamp.protocol.ApplicationSession</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.autobahn.ComponentBase.warning">
+<code class="descname">warning</code><span class="sig-paren">(</span><em>msg</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/autobahn.html#ComponentBase.warning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.autobahn.ComponentBase.warning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create warning level log message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Log message.</li>
+<li><strong>**kwargs</strong> – Keyword arguments passed to message formatter</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="client.html" class="btn btn-neutral" title="Clients" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, claashk.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

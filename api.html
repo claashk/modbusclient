@@ -1,0 +1,661 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API Templates &mdash; modbusclient  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="modbusclient  documentation" href="index.html"/>
+        <link rel="next" title="The Modbus Protocol" href="protocol.html"/>
+        <link rel="prev" title="Welcome to modbusclient’s documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> modbusclient
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Templates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#default-api-template">Default API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#asynchronous-api-template">Asynchronous API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="protocol.html">The Modbus Protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="protocol.html#protocol-implementation">Protocol Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html">User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html#payload-types">Payload Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html#data-types">Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#default-client">Default Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#asynchronous-client">Asynchronous Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wamp.html">WAMP Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wamp.html#base-class-for-wamp-components">Base Class for WAMP Components</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">modbusclient</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>API Templates</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api-templates">
+<h1>API Templates<a class="headerlink" href="#api-templates" title="Permalink to this headline">¶</a></h1>
+<p>In order to set you up quickly, there are two API templates, which allow to
+create a Modbus client from a simple API definition. The API definition is
+assumed to be provided in terms of a dictionary, which contains a meaningful
+key (such as the numeric message ID or a string) as key and a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code> object as value.</p>
+</div>
+<div class="section" id="default-api-template">
+<h1>Default API Template<a class="headerlink" href="#default-api-template" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="modbusclient.api_wrapper.ApiWrapper">
+<em class="property">class </em><code class="descclassname">modbusclient.api_wrapper.</code><code class="descname">ApiWrapper</code><span class="sig-paren">(</span><em>api={}</em>, <em>host=''</em>, <em>port=502</em>, <em>timeout=None</em>, <em>connect=False</em>, <em>unit=255</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default API implementation to quickly</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>api</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – Dictionary containing the API definition. Should contain
+a string with desired method name as key and a
+<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> object as value.</li>
+<li><strong>host</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – IP address of the server. Passed verbatim to
+<a class="reference internal" href="client.html#modbusclient.client.Client" title="modbusclient.client.Client"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+<li><strong>port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Port to connect to at the server. Passed verbatim to
+<a class="reference internal" href="client.html#modbusclient.client.Client" title="modbusclient.client.Client"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+<li><strong>timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Client timeout. Passed verbatim to
+<a class="reference internal" href="client.html#modbusclient.client.Client" title="modbusclient.client.Client"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+<li><strong>connect</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – Connect to the client. Defaults to <cite>False</cite>. Passed
+verbatim to <a class="reference internal" href="client.html#modbusclient.client.Client" title="modbusclient.client.Client"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="modbusclient.api_wrapper.ApiWrapper.unit">
+<code class="descname">unit</code><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Modbus unit ID: Defaults to NO_UNIT.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.__enter__">
+<code class="descname">__enter__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.__enter__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.__enter__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context Manager support</p>
+<p>Connects to the server if not already connected.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.__exit__">
+<code class="descname">__exit__</code><span class="sig-paren">(</span><em>type</em>, <em>value</em>, <em>traceback</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.__exit__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.__exit__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context Manager support</p>
+<p>Logs out and disconnects from the server.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect this client to a host</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>address</strong> (<em>string</em>) – IP Adress of the host</li>
+<li><strong>port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Port to use. Defaults to 502</li>
+<li><strong>timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – Timeout in seconds. If not set, it will be set to
+the default timeout.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.disconnect">
+<code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disconnect this client</p>
+<p>If this client is connected, the socket will be shutdown and then closed.
+If the client is not connected, calling this method has no effect.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get value of a single message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> or str) – Message
+to read from remote device. If this is not a
+<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> instance, the api
+dictionary will be used with <cite>message</cite> as key to lookup the
+payload.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Value of message</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.is_connected">
+<code class="descname">is_connected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.is_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.is_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if this client is connected to a server</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if and only if this client is connected to a server</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.is_logged_in">
+<code class="descname">is_logged_in</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.is_logged_in"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.is_logged_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if this client is currently logged in</p>
+<p>Intended to be implemented by derived class, if applicable</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">False.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load settings from dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>settings</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – Dictionary with settings as returned by
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Successfully modified settings</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.logout">
+<code class="descname">logout</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.logout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.logout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log out client</p>
+<p>This is a stub. Intended to be implemented by derived classes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>selection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save current settings into dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selection</strong> (<em>iterable</em>) – Iterable of messages (API keys) to save. If
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, all messages of the current API are backed up.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing API message key and setting as value</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.api_wrapper.ApiWrapper.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>message</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/api_wrapper.html#ApiWrapper.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.api_wrapper.ApiWrapper.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set value of a single message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message</strong> (<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a>) – Message to write to
+remote device. If this is not a
+<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> instance, the api
+dictionary will be used with <cite>message</cite> as key to lookup the
+payload.</li>
+<li><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – Value to set for this message.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Value of message</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">value</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="asynchronous-api-template">
+<h1>Asynchronous API Template<a class="headerlink" href="#asynchronous-api-template" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper">
+<em class="property">class </em><code class="descclassname">modbusclient.asyncio.api_wrapper.</code><code class="descname">ApiWrapper</code><span class="sig-paren">(</span><em>api={}</em>, <em>host=''</em>, <em>port=502</em>, <em>timeout=None</em>, <em>max_transactions=3</em>, <em>unit=255</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Asynchronous API implementation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>api</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – Dictionary containing the API definition. Should contain
+a string with desired method name as key and a
+<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> object as value.</li>
+<li><strong>host</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – IP address of the server. Passed verbatim to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></li>
+<li><strong>port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Port to connect to at the server. Passed verbatim to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></li>
+<li><strong>timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Client timeout. Passed verbatim to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></li>
+<li><strong>max_transactions</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Maximum number of parallel transactions. Passed
+verbatim to <code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code>.</li>
+<li><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Modbus unit ID to use. Defaults to NO_UNIT.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.unit">
+<code class="descname">unit</code><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Modbus unit ID: Defaults to NO_UNIT.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.__aenter__">
+<code class="descname">__aenter__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.__aenter__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.__aenter__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context Manager support</p>
+<p>Connects to the server if not already connected.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.__aexit__">
+<code class="descname">__aexit__</code><span class="sig-paren">(</span><em>type</em>, <em>value</em>, <em>traceback</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.__aexit__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.__aexit__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context Manager support</p>
+<p>Logs out and disconnects from the server.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect this client to a host</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>address</strong> (<em>string</em>) – IP Adress of the host</li>
+<li><strong>port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Port to use. Defaults to 502</li>
+<li><strong>timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – Timeout in seconds. If not set, it will be set to
+the default timeout.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.disconnect">
+<code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disconnect this client</p>
+<p>If this client is connected, the socket will be shutdown and then closed.
+If the client is not connected, calling this method has no effect.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get value of a single message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> or str) – Message to
+read from remote device. If this is not a
+<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> instance, the api
+dictionary will be used with <cite>message</cite> as key to lookup the
+payload.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Value of message</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.is_connected">
+<code class="descname">is_connected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.is_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.is_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if this client is connected to a server</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if and only if this client is connected to a server</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.is_logged_in">
+<code class="descname">is_logged_in</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.is_logged_in"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.is_logged_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if this client is currently logged in</p>
+<p>Intended to be implemented by derived class, if applicable</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">False.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load settings from dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>settings</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – Dictionary with settings as returned by
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Successfully modified settings</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.logout">
+<code class="descname">logout</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.logout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.logout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log out client</p>
+<p>This is a stub. Intended to be implemented by derived classes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>selection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save current settings into dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selection</strong> (<em>iterable</em>) – Iterable of messages (API keys) to save. If
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, all messages of the current API are backed up.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing API message key and setting as value</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modbusclient.asyncio.api_wrapper.ApiWrapper.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>message</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/asyncio/api_wrapper.html#ApiWrapper.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.asyncio.api_wrapper.ApiWrapper.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set value of a single message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>message</strong> (<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> or str) – Message
+to write to remote device. If this is not a
+<a class="reference internal" href="payload.html#modbusclient.payload.Payload" title="modbusclient.payload.Payload"><code class="xref py py-class docutils literal notranslate"><span class="pre">Payload</span></code></a> instance, the api
+dictionary will be used with <cite>message</cite> as key to lookup the
+payload.</li>
+<li><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><em>object</em></a>) – Value to set for this message.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Value of message</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">value</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="protocol.html" class="btn btn-neutral float-right" title="The Modbus Protocol" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to modbusclient’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, claashk.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

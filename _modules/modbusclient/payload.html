@@ -1,0 +1,459 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>modbusclient.payload &mdash; modbusclient  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="modbusclient  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> modbusclient
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Templates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html#default-api-template">Default API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html#asynchronous-api-template">Asynchronous API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocol.html">The Modbus Protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocol.html#protocol-implementation">Protocol Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html">User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html#payload-types">Payload Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html#data-types">Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html">Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html#default-client">Default Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html#asynchronous-client">Asynchronous Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wamp.html">WAMP Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wamp.html#base-class-for-wamp-components">Base Class for WAMP Components</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">modbusclient</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>modbusclient.payload</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for modbusclient.payload</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">.functions</span> <span class="k">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="Payload"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Payload">[docs]</a><span class="k">class</span> <span class="nc">Payload</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Payload parser</span>
+
+<span class="sd">    Small wrapper around parser objects to simplify payload definition. The</span>
+<span class="sd">    actual parser is passed as argument `dtype` and has to provide</span>
+
+<span class="sd">    * a method ``encode`` to encode python objects to bytes</span>
+<span class="sd">    * a method ``decode`` to convert bytes to python objects</span>
+<span class="sd">    * a ``__len__`` implementation returning the number of bytes required in the</span>
+<span class="sd">      encoded string.</span>
+
+<span class="sd">    For examples of compatible parser implementations refer to the `data_types`</span>
+<span class="sd">    module.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        dtype (object): Datatype object capable of converting from python object</span>
+<span class="sd">            to bytes and back. Must provide methods ``encode`` and ``decode``.</span>
+<span class="sd">        address (int): Starting address (register number) of the message</span>
+<span class="sd">        mode (str): Permissible read write modes. Defaults to read only (``&#39;r&#39;``)</span>
+<span class="sd">        **kwargs (dict): Additional properties added verbatim to this instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">dtype</span><span class="p">,</span>
+                 <span class="n">address</span><span class="p">,</span>
+                 <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span>
+                 <span class="n">reader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">writer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_address</span> <span class="o">=</span> <span class="n">address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span> <span class="o">=</span> <span class="n">reader</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span> <span class="o">=</span> <span class="n">writer</span>
+        <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_writable</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span> <span class="o">=</span> <span class="n">READ_HOLDING_REGISTERS</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span> <span class="o">=</span> <span class="n">READ_INPUT_REGISTERS</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_writable</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span> <span class="o">=</span> <span class="n">WRITE_SINGLE_REGISTER</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span> <span class="o">=</span> <span class="n">WRITE_MULTIPLE_REGISTERS</span>
+
+<div class="viewcode-block" id="Payload.__len__"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Payload.__len__">[docs]</a>    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get length of this message in bytes</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            int: Number of bytes required by this message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Payload.__str__"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Payload.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Message </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">fmt</span> <span class="ow">in</span> <span class="p">[(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot; (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="s2">&quot; [</span><span class="si">{}</span><span class="s2">]&quot;</span><span class="p">)]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">)))</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">components</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Payload.__hash__"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Payload.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get hash of this Message</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            str: equivalent of ``hash(self.address)``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_address</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Payload.__eq__"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Payload.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equality comparison</span>
+
+<span class="sd">        Two messages are considered equal, if and only if their addresses match.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            other (:class:`~modbusclient.Payload`): Payload to compare to</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: ``True`` if and only if the addresses of both messages are</span>
+<span class="sd">            equal.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_address</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_address</span></div>
+
+<div class="viewcode-block" id="Payload.__ne__"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Payload.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inequality comparison</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            other (:class:`~modbusclient.Payload`): Payload to compare to</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: ``False`` if and only if the addresses of both messages are</span>
+<span class="sd">            equal.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_address</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_address</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">address</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get address (numeric ID) of this message</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            int: (starting) address of this message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_address</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">register_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get number of registers used by this parser</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            int: Number of 2-byte registers used by this parser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get function code used to read this value from device</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            int: Function code used to read this value from device. ``None`` if</span>
+<span class="sd">            value cannot be read.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">writer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get function code used to write this value to device</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            int: Function code used to write this value to a device. ``None`` if</span>
+<span class="sd">            value cannot be written.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_writable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if this message is writable&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;w&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_write_protected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if message requires Grid guard code to be written</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: True if and only if this message is writable with special</span>
+<span class="sd">            permissions only.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;w!&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span>
+
+<div class="viewcode-block" id="Payload.encode"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Payload.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a value to binary modbus representation</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            value (object): Python variable to encode</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bytes: Packed binary version of :value:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Payload.decode"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Payload.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert bytes from binary modbus representation into variable</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            buffer (bytes): Data in packed binary format</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            object: Python representation of the data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Enum"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Enum">[docs]</a><span class="k">class</span> <span class="nc">Enum</span><span class="p">(</span><span class="n">Payload</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Specialisation for enumeration messages</span>
+
+<span class="sd">    Accepts an additional dictionary as argument, which relates the keys to</span>
+<span class="sd">    a string describing the meaning.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        choices(dict): Dictionary mapping enum values to values</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="n">address</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Fixpoint"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Fixpoint">[docs]</a><span class="k">class</span> <span class="nc">Fixpoint</span><span class="p">(</span><span class="n">Payload</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Specialisation of :class:´Payload` for fixed point floats</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        dtype ()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">digits</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="n">address</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="n">digits</span>
+
+<div class="viewcode-block" id="Fixpoint.encode"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Fixpoint.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">*</span> <span class="n">value</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Fixpoint.decode"><a class="viewcode-back" href="../../payload.html#modbusclient.payload.Fixpoint.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="nb">bytes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">Timestamp</span><span class="p">(</span><span class="n">Payload</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Message for times in seconds since 1970-01-01&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">utc</span><span class="p">):</span>
+        <span class="nb">super</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">utc</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer</span><span class="p">):</span>
+        <span class="n">sec</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="n">sec</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, claashk.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,563 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The Modbus Protocol &mdash; modbusclient  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="modbusclient  documentation" href="index.html"/>
+        <link rel="next" title="User Data" href="payload.html"/>
+        <link rel="prev" title="Welcome to modbusclient’s documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> modbusclient
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The Modbus Protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#links">Links</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#protocol-implementation">Protocol Implementation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#parser-functions">Parser Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modbus-application-protocol-header-mbap">Modbus Application Protocol Header (MBAP)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#read-request-pdu">Read Request PDU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#read-response-pdu">Read Response PDU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#write-request-pdu">Write Request PDU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#write-response-pdu">Write Response PDU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#helper-functions">Helper Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html">User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html#payload-types">Payload Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="payload.html#data-types">Data Types</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">modbusclient</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>The Modbus Protocol</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/protocol.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-modbus-protocol">
+<h1>The Modbus Protocol<a class="headerlink" href="#the-modbus-protocol" title="Permalink to this headline">¶</a></h1>
+<p>There are a number of good online resources describing the Modbus protocol. Thus
+we only cover the basics here, which are essential to understand this
+implementation. The reader is referred to the <a class="reference external" href="http://www.modbus.org">Modbus Homepage</a> for detailed
+information.</p>
+<p>Modbus is a binary protocol, which consists of messages passed between a server
+and a client. Several transport protocols are possible, but this implementation
+exclusively supports TCP/IP as transport layer. Each Modbus message is composed
+of three components:</p>
+<ul class="simple">
+<li>A seven byte long Modbus Application Protocol Header (MBAP,
+see <a class="reference internal" href="#modbusclient.ApplicationProtocolHeader" title="modbusclient.ApplicationProtocolHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplicationProtocolHeader</span></code></a>), which is actually eight
+bytes long in this implementation.</li>
+<li>A message specific header called Protocol Data Unit (PDU)</li>
+<li>An API specific payload of variable length</li>
+</ul>
+<p>Each message sent to the client initiates the invocation of a function on the
+server. The result of this function is then returned to the client. The functions
+can be used to read or manipulate data on the server. The data is stored in
+so-called coils and registers. A coil is the equivalent to a bit, while a
+register contains 16-bits of data. The registers are addressed by decimal
+numbers. Modbus desriminates between <em>Input Registers</em> (read-only) and <em>Holding
+Registers</em> (read-write).</p>
+<p>The organisation of data in registers and coils is API/vendor specific.</p>
+<div class="section" id="links">
+<h2>Links<a class="headerlink" href="#links" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://www.modbus.org">Modbus Homepage</a></li>
+<li><a class="reference external" href="http://www.modbus.org/specs.php">Official Modbus Documentation</a></li>
+<li><a class="reference external" href="https://en.wikipedia.org/wiki/Modbus">Modbus Page at Wikipedia</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="protocol-implementation">
+<h1>Protocol Implementation<a class="headerlink" href="#protocol-implementation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="parser-functions">
+<h2>Parser Functions<a class="headerlink" href="#parser-functions" title="Permalink to this headline">¶</a></h2>
+<p>The following functions can be used to create requests in binary form and to
+parse binary response messages:</p>
+<dl class="function">
+<dt id="modbusclient.new_request">
+<code class="descclassname">modbusclient.</code><code class="descname">new_request</code><span class="sig-paren">(</span><em>function</em>, <em>payload=b''</em>, <em>unit=255</em>, <em>transaction=0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/protocol.html#new_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.new_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a request message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>function</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Function code</li>
+<li><strong>payload</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)"><em>bytes</em></a>) – Data sent along with the request. Empty by default.
+Used only for writing functions.</li>
+<li><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Unit ID of device. Defaults to NO_UNIT</li>
+<li><strong>transaction</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Transaction ID. Defaults to 0.</li>
+<li><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – Keyword arguments passed verbatim to the request of
+the function</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Header of the request
+and the request in binary form.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)">tuple</a>(<a class="reference internal" href="#modbusclient.ApplicationProtocolHeader" title="modbusclient.ApplicationProtocolHeader">ApplicationProtocolHeader</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)">bytes</a>)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="modbusclient.parse_response_header">
+<code class="descclassname">modbusclient.</code><code class="descname">parse_response_header</code><span class="sig-paren">(</span><em>buffer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/protocol.html#parse_response_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.parse_response_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse response header</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>buffer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)"><em>bytes</em></a>) – Buffer containing the Application protocol header</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Application protocol header</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#modbusclient.ApplicationProtocolHeader" title="modbusclient.ApplicationProtocolHeader">ApplicationProtocolHeader</a></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Raise:</dt>
+<dd>RuntimeError: if header.protocol does not match MODBUS_PROTOCOL_ID</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="modbusclient.parse_response_body">
+<code class="descclassname">modbusclient.</code><code class="descname">parse_response_body</code><span class="sig-paren">(</span><em>header</em>, <em>buffer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/protocol.html#parse_response_body"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.parse_response_body" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse response body</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>header</strong> (<a class="reference internal" href="#modbusclient.ApplicationProtocolHeader" title="modbusclient.ApplicationProtocolHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplicationProtocolHeader</span></code></a>) – The header. See
+e.g. <a class="reference internal" href="#modbusclient.parse_response_header" title="modbusclient.parse_response_header"><code class="xref py py-func docutils literal notranslate"><span class="pre">parse_response_header()</span></code></a></li>
+<li><strong>buffer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.8)"><em>bytes</em></a>) – Buffer containing the response body after the header</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Payload and error code</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)">tuple</a>(<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)">object</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a>)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="modbus-application-protocol-header-mbap">
+<h2>Modbus Application Protocol Header (MBAP)<a class="headerlink" href="#modbus-application-protocol-header-mbap" title="Permalink to this headline">¶</a></h2>
+<p>The application protocol header is the first part of each modbus message.</p>
+<dl class="class">
+<dt id="modbusclient.ApplicationProtocolHeader">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">ApplicationProtocolHeader</code><a class="headerlink" href="#modbusclient.ApplicationProtocolHeader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modbus Application Protocol Header (MBAP)</p>
+<p>The application header in this implementation has a size of eight bytes. It is
+added to every request sent by a client. The server copies the MBAP into its
+response with a modified length field.</p>
+<dl class="attribute">
+<dt id="modbusclient.ApplicationProtocolHeader.transaction">
+<code class="descname">transaction</code><a class="headerlink" href="#modbusclient.ApplicationProtocolHeader.transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Transaction ID to uniquely identify the transaction in
+if several requests are sent in parallel</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.ApplicationProtocolHeader.protocol">
+<code class="descname">protocol</code><a class="headerlink" href="#modbusclient.ApplicationProtocolHeader.protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – MODBUS protocol id (always 0)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.ApplicationProtocolHeader.length">
+<code class="descname">length</code><a class="headerlink" href="#modbusclient.ApplicationProtocolHeader.length" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – following data bytes. For a request, this has to be set by the client,
+while the response length is set by the server</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.ApplicationProtocolHeader.unit">
+<code class="descname">unit</code><a class="headerlink" href="#modbusclient.ApplicationProtocolHeader.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Unit ID of the server. Defaults to NO_UNIT</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.ApplicationProtocolHeader.function">
+<code class="descname">function</code><a class="headerlink" href="#modbusclient.ApplicationProtocolHeader.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Function code. In the MODBUS specification this is actually
+part of the PDU. Since the communication is simplified by including it in
+the MBAP instead. In case of errors, this variable assumes the error
+function code (0x80).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="read-request-pdu">
+<h2>Read Request PDU<a class="headerlink" href="#read-request-pdu" title="Permalink to this headline">¶</a></h2>
+<p>Protocol Data Unit (PDU) used by the client for read requests.</p>
+<dl class="class">
+<dt id="modbusclient.ReadRequest">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">ReadRequest</code><a class="headerlink" href="#modbusclient.ReadRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modbus Read Request Protocol Data Unit (PDU)</p>
+<dl class="attribute">
+<dt id="modbusclient.ReadRequest.start">
+<code class="descname">start</code><a class="headerlink" href="#modbusclient.ReadRequest.start" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Address of (first) register to read from</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.ReadRequest.count">
+<code class="descname">count</code><a class="headerlink" href="#modbusclient.ReadRequest.count" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Number of coils/registers to read from</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A PDU usually starts with a single byte containing the function code, which
+is part of the <a class="reference internal" href="#modbusclient.ApplicationProtocolHeader" title="modbusclient.ApplicationProtocolHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplicationProtocolHeader</span></code></a> in this
+implementation.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="read-response-pdu">
+<h2>Read Response PDU<a class="headerlink" href="#read-response-pdu" title="Permalink to this headline">¶</a></h2>
+<p>Protocol Data Unit (PDU) used by the server to ackknowledge read requests.</p>
+<dl class="class">
+<dt id="modbusclient.ReadResponse">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">ReadResponse</code><a class="headerlink" href="#modbusclient.ReadResponse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modbus Response Protocol Data Unit (PDU)</p>
+<dl class="attribute">
+<dt id="modbusclient.ReadResponse.size">
+<code class="descname">size</code><a class="headerlink" href="#modbusclient.ReadResponse.size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Number of payload bytes</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A PDU usually starts with a single byte containing the function code, which
+is part of the <a class="reference internal" href="#modbusclient.ApplicationProtocolHeader" title="modbusclient.ApplicationProtocolHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplicationProtocolHeader</span></code></a> in this
+implementation.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="write-request-pdu">
+<h2>Write Request PDU<a class="headerlink" href="#write-request-pdu" title="Permalink to this headline">¶</a></h2>
+<p>Protocol Data Unit (PDU) used by the client for write requests.</p>
+<dl class="class">
+<dt id="modbusclient.WriteRequest">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">WriteRequest</code><a class="headerlink" href="#modbusclient.WriteRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modbus Write Request Protocol Data Unit (PDU)</p>
+<dl class="attribute">
+<dt id="modbusclient.WriteRequest.start">
+<code class="descname">start</code><a class="headerlink" href="#modbusclient.WriteRequest.start" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Address of (first) register to write to</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.WriteRequest.count">
+<code class="descname">count</code><a class="headerlink" href="#modbusclient.WriteRequest.count" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Number fo coils/registers to write to</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.WriteRequest.size">
+<code class="descname">size</code><a class="headerlink" href="#modbusclient.WriteRequest.size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Number of payload bytes to write</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A PDU usually starts with a single byte containing the function code, which
+is part of the <a class="reference internal" href="#modbusclient.ApplicationProtocolHeader" title="modbusclient.ApplicationProtocolHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplicationProtocolHeader</span></code></a> in this
+implementation.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="write-response-pdu">
+<h2>Write Response PDU<a class="headerlink" href="#write-response-pdu" title="Permalink to this headline">¶</a></h2>
+<p>Protocol Data Unit (PDU) used by the server to acknowledge write requests.</p>
+<dl class="class">
+<dt id="modbusclient.WriteResponse">
+<em class="property">class </em><code class="descclassname">modbusclient.</code><code class="descname">WriteResponse</code><a class="headerlink" href="#modbusclient.WriteResponse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modbus Response Protocol Data Unit (PDU)</p>
+<dl class="attribute">
+<dt id="modbusclient.WriteResponse.start">
+<code class="descname">start</code><a class="headerlink" href="#modbusclient.WriteResponse.start" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Address of (first) register to write to</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modbusclient.WriteResponse.count">
+<code class="descname">count</code><a class="headerlink" href="#modbusclient.WriteResponse.count" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – Number of coils/registers which have been written</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A PDU usually starts with a single byte containing the function code, which
+is part of the <a class="reference internal" href="#modbusclient.ApplicationProtocolHeader" title="modbusclient.ApplicationProtocolHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplicationProtocolHeader</span></code></a> in this
+implementation.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="helper-functions">
+<h2>Helper Functions<a class="headerlink" href="#helper-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="modbusclient.protocol.create_header">
+<code class="descclassname">modbusclient.protocol.</code><code class="descname">create_header</code><span class="sig-paren">(</span><em>name</em>, <em>format</em>, <em>attrs</em>, <em>defaults=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/modbusclient/protocol.html#create_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modbusclient.protocol.create_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new header</p>
+<p>Creates a header class based on namedtuple. The namedtuple components provide
+a convenient access to the data stored in the header. Additionally classes
+created by this function contain two methods to read from and write to a
+binary buffer:</p>
+<ul class="simple">
+<li>static method from_buffer creates an object from a binary buffer</li>
+<li>to_buffer: writes content of the header to a binary buffer</li>
+<li>__len__ : Provides the length of the header (excluding payload) in bytes</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of class to create</li>
+<li><strong>format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Format string. Refer to Struct documentation for format
+specification</li>
+<li><strong>attrs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Attributes to add. Format as expected by namedtuple</li>
+<li><strong>defaults</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a>) – Default value for each attribute in attrs</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Class object capable of storing the header content with additional
+methods to parse and serialize the stored data in binary form.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">class</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="payload.html" class="btn btn-neutral float-right" title="User Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to modbusclient’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, claashk.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
