@@ -1,0 +1,430 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>modbusclient.client &mdash; modbusclient  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="modbusclient  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> modbusclient
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Templates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html#default-api-template">Default API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html#asynchronous-api-template">Asynchronous API Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocol.html">The Modbus Protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocol.html#protocol-implementation">Protocol Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html">User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html#payload-types">Payload Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload.html#data-types">Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html">Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html#default-client">Default Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../client.html#asynchronous-client">Asynchronous Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wamp.html">WAMP Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wamp.html#base-class-for-wamp-components">Base Class for WAMP Components</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">modbusclient</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>modbusclient.client</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for modbusclient.client</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">socket</span>
+
+<span class="kn">from</span> <span class="nn">.protocol</span> <span class="k">import</span> <span class="n">ApplicationProtocolHeader</span><span class="p">,</span> <span class="n">NO_UNIT</span><span class="p">,</span> <span class="n">DEFAULT_PORT</span>
+<span class="kn">from</span> <span class="nn">.protocol</span> <span class="k">import</span> <span class="n">new_request</span><span class="p">,</span> <span class="n">parse_response_header</span><span class="p">,</span> <span class="n">parse_response_body</span>
+<span class="kn">from</span> <span class="nn">.protocol</span> <span class="k">import</span> <span class="n">INVALID_TRANSACTION_ID</span><span class="p">,</span> <span class="n">UNIT_MISMATCH</span>
+
+
+<div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Modbus client</span>
+
+<span class="sd">    Modbus client to send function calls to a server and receive the respective</span>
+<span class="sd">    responses. Can be used in a with block.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        address (string): IP Adress of the host. If empty, no connection will be</span>
+<span class="sd">            attempted. Defaults to the empty string.</span>
+<span class="sd">        port (int): Port to use. Defaults to 502</span>
+<span class="sd">        timeout (float): Timeout in seconds. If not set, it will be set to</span>
+<span class="sd">           the default timeout.</span>
+<span class="sd">        connect (bool): If True, the client immediately connects if an address</span>
+<span class="sd">           is specified. Otherwise a call to :meth:`connect` or :meth:`__enter__`</span>
+<span class="sd">           is required.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        host (string): IP Adress of the host</span>
+<span class="sd">        port (int): Port to use. Defaults to 502</span>
+<span class="sd">        timeout (int or None): Timeout in seconds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">DEFAULT_PORT</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">connect</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="ow">and</span> <span class="n">connect</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_connected</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Client.is_connected"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.is_connected">[docs]</a>    <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if this client is connected to a server</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bool: True if and only if this client is connected to a server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_socket</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.connect"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Connect this client to a host</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            address (string): IP Adress of the host. If provided, it will replace</span>
+<span class="sd">                the current :attr:`Client.address`. Defaults to</span>
+<span class="sd">                :attr:`Client.address`</span>
+<span class="sd">            port (int): Port to use. If provided, it will replace</span>
+<span class="sd">                the current :attr:`Client.port`. Defaults to :attr:`Client.port`.</span>
+<span class="sd">            timeout (float): Timeout in seconds. If provided, it will replace</span>
+<span class="sd">                the current :attr:`Client.timeout`. Defaults to</span>
+<span class="sd">                :attr:`Client.timeout`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;address&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;port&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timeout&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">),</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.disconnect"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Disconnect this client</span>
+
+<span class="sd">        If this client is connected, the socket will be shutdown and then closed.</span>
+<span class="sd">        If the client is not connected, calling this method has no effect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_connected</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SHUT_RDWR</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Client.request"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.request">[docs]</a>    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">NO_UNIT</span><span class="p">,</span> <span class="n">transaction</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Send a request to the server</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            function (int): Function code</span>
+<span class="sd">            payload (bytes): Data sent along with the request. Empty by default.</span>
+<span class="sd">                Used only for writing functions.</span>
+<span class="sd">            unit (int): Unit ID of device. Defaults to NO_UNIT</span>
+<span class="sd">            transaction (int): Transaction ID. Defaults to 0.</span>
+<span class="sd">            **kwargs (dict): Keyword arguments passed verbatim to the request of</span>
+<span class="sd">              the function</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            ~modbus.ApplicationProtocolHeader: Header of the request</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_connected</span><span class="p">()</span>
+        <span class="n">header</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">new_request</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">function</span><span class="p">,</span>
+                                  <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+                                  <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span>
+                                  <span class="n">transaction</span><span class="o">=</span><span class="n">transaction</span><span class="p">,</span>
+                                  <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">header</span></div>
+
+<div class="viewcode-block" id="Client.receive"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.receive">[docs]</a>    <span class="k">def</span> <span class="nf">receive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Receive a given number of bytes from the server</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            size (int): Number of bytes to receive</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            bytes: Buffer containing the received bytes.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionAbortedError: If the connection is terminated unexpectedly</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_connected</span><span class="p">()</span>
+        <span class="n">bytes_read</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">chunks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="n">bytes_read</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">:</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="n">bytes_read</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">chunk</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ConnectionAbortedError</span><span class="p">(</span><span class="s2">&quot;Connection terminated unexpectedly&quot;</span><span class="p">)</span>
+            <span class="n">bytes_read</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.get_response"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.get_response">[docs]</a>    <span class="k">def</span> <span class="nf">get_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get response from the server</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple(~modbusclient.ApplicationProtocolHeader, bytes, int): The</span>
+<span class="sd">            following values will be returned:</span>
+
+<span class="sd">            * The received MBAP header</span>
+<span class="sd">            * The raw data bytes of the payload without any headers</span>
+<span class="sd">            * An error code or ``None``, if no error occurred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">ApplicationProtocolHeader</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">parse_response_header</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">payload</span><span class="p">,</span> <span class="n">err_code</span> <span class="o">=</span> <span class="n">parse_response_body</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">buffer</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">header</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">err_code</span></div>
+
+<div class="viewcode-block" id="Client.iter_responses"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.iter_responses">[docs]</a>    <span class="k">def</span> <span class="nf">iter_responses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iter over a number of responses</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            n (int): Number of request headers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_response</span><span class="p">()</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="Client.call"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call a function on the server and return the result</span>
+
+<span class="sd">        Sends a request via :meth:`~modbus.Client.request` followed by an</span>
+<span class="sd">        immediate call of :meth:`~modbus.Client.get_response`</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            function (int): Function code</span>
+<span class="sd">            **kwargs (dict): Keyword arguments passed verbatim to</span>
+<span class="sd">                :meth:`~modbus.Client.request`</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            tuple: Data returned by :meth:`~modbus.Client.get_response`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">resp</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_response</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">transaction</span> <span class="o">!=</span> <span class="n">req</span><span class="o">.</span><span class="n">transaction</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">INVALID_TRANSACTION_ID</span>
+
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">unit</span> <span class="o">!=</span> <span class="n">req</span><span class="o">.</span><span class="n">unit</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">unit</span> <span class="o">!=</span> <span class="n">NO_UNIT</span><span class="p">:</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">UNIT_MISMATCH</span>
+
+        <span class="k">return</span> <span class="n">resp</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">error</span></div>
+
+<div class="viewcode-block" id="Client.assert_connected"><a class="viewcode-back" href="../../client.html#modbusclient.client.Client.assert_connected">[docs]</a>    <span class="k">def</span> <span class="nf">assert_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assert client is connected</span>
+
+<span class="sd">        A helper method which raises an exception, if the client is not connected</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            RuntimeError: if :meth:`~modbus.Client.is_connected` returns</span>
+<span class="sd">            ``False``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_connected</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Client is not connected. Call connect first&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, claashk.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
