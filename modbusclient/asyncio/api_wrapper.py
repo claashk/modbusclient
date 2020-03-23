@@ -121,8 +121,7 @@ class ApiWrapper(object):
             function=message.reader,
             start=message.address,
             count=message.register_count,
-            unit=self.unit,
-            transaction=0)
+            unit=self.unit)
 
         return message.decode(payload)
 
@@ -149,8 +148,7 @@ class ApiWrapper(object):
                 start=message.address,
                 count=message.register_count,
                 payload=message.encode(value),
-                unit=self.unit,
-                transaction=0)
+                unit=self.unit)
         except ModbusError as ex:
             err_code = ex.args[0]
             if err_code == ILLEGAL_FUNCTION_ERROR:
