@@ -1,6 +1,6 @@
 
 #from asyncio import open_connection, Lock , get_running_loop
-from asyncio import open_connection, Lock , get_event_loop
+from asyncio import open_connection, Lock , get_event_loop, IncompleteReadError
 from logging import getLogger
 
 from ..protocol import ApplicationProtocolHeader, parse_response_body
@@ -66,7 +66,13 @@ class Client(object):
         Return:
             bool: True if and only if this client is connected to a server
         """
-        return self._writer is not None and not self._writer.transport.is_closing()
+        if self._writer is None or self._reader is None:
+            return False
+
+        if self._reader.at_eof() or self._writer.transport.is_closing():
+            return False
+
+        return True
 
     async def connect(self, host=None, port=None):
         """Connect this client to a host
@@ -91,6 +97,14 @@ class Client(object):
         """
         if self.is_connected():
             logger.debug("Disconnecting ...")
+            #cancel all existing future
+            for i, (header, future) in enumerate(self._transactions):
+                if future is not None:
+                    logger.debug("Cancelled future for Transaction ID {} ..."
+                                 .format(header.transaction))
+                    future.cancel()
+                    self._transactions[i] = (None, None)
+
             self._writer.close()
             self._reader = None
             # await self._writer.wait_closed() -> python3.7
@@ -133,7 +147,7 @@ class Client(object):
             ValueError: If transaction ID is out of bounds
         """
         logger.debug("Requesting function %s", str(function))
-        self.assert_connected()
+        await self.assert_connected()
         if transaction is None:
             transaction = await self.get_transaction_id()
         elif transaction < 0 or transaction >= self.max_transactions:
@@ -153,6 +167,7 @@ class Client(object):
         try:
             self._writer.write(msg)
             logger.debug("Sent request with transaction ID %d.", transaction)
+            await self._writer.drain()
         except Exception as exc:
             logger.warn("Error sending request with transaction ID %d: %s",
                          transaction, str(exc))
@@ -175,15 +190,20 @@ class Client(object):
             * The raw data bytes of the payload without any headers
             * An error code or ``None``, if no error occurred.
         """
+        await self.assert_connected()
         logger.debug("Awaiting response ...")
-        self.assert_connected()
         nbytes = ApplicationProtocolHeader.parser.size
+        try:
+            # Lock to make sure header and body are read in sequence
+            async with self._read_lock:
+                buffer = await self._reader.readexactly(nbytes)
+                header = parse_response_header(buffer)
+                buffer = await self._reader.readexactly(header.length - 2)
+        except IncompleteReadError:
+            logger.info("Connection closed unexpectedly. Cleaning up ...")
+            self.diconnect()
+            return
 
-        # Lock to make sure header and body are read in sequence
-        async with self._read_lock:
-            buffer = await self._reader.readexactly(nbytes)
-            header = parse_response_header(buffer)
-            buffer = await self._reader.readexactly(header.length - 2)
         payload, err_code = parse_response_body(header, buffer)
         logger.debug("Got response: %s, %s, %s", header, payload, err_code)
 
@@ -235,10 +255,9 @@ class Client(object):
         header, future = await self.request(function, **kwargs)
         while not future.done():
             await self.get_response()
-
         return future.result() #will raise, if an exception is set
 
-    def assert_connected(self):
+    async def assert_connected(self):
         """Assert client is connected
 
         A helper method which raises an exception, if the client is not connected
@@ -248,8 +267,9 @@ class Client(object):
             ``False``.
 
         """
+        logger.debug("Checking connection status ...")
         if not self.is_connected():
-            raise RuntimeError("Client is not connected. Call connect first")
+            await self.connect()
 
     async def get_transaction_id(self):
         """Get transaction ID

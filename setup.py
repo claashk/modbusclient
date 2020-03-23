@@ -58,6 +58,7 @@ setup(
     ],
     test_suite='tests',
     python_requires=">=3.6",
+    #zip_safe=False,
     **build_doc
 )
  
