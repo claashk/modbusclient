@@ -14,6 +14,7 @@ Welcome to modbusclient's documentation!
    protocol
    payload
    client
+   wamp
 
 Implementation Overview
 =======================
