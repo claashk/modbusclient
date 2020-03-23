@@ -1,5 +1,7 @@
 _pycache__/
 *.py[cod]
+.idea/
 
 dist/
+build/
 *.egg-info/
