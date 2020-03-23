@@ -5,5 +5,5 @@ A very simple modbus implementation.
 There is always room for one more modbus implementation.
 
 # Documentation
-Coming soon
+https://claashk.github.io/modbusclient
  
