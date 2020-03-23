@@ -42,7 +42,8 @@ setup(
     install_requires=[ # See https://packaging.python.org/discussions/install-requires-vs-requirements/
         'setuptools',
         'sphinx',
-        'sphinx-rtd-theme'
+        'sphinx-rtd-theme',
+        'numpy'
     ],
     author='claashk',
     author_email='claashk@xxx',
