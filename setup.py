@@ -4,10 +4,12 @@ from setuptools import setup, find_packages
 from pathlib import Path
 
 def read(path):
-  with open(path) as input_file:
-    return input_file.read()
+    with open(path) as input_file:
+        return input_file.read()
+
 
 name = "modbusclient"
+
 
 version_file = Path(__file__).parent / Path(*name.split('.')) / "version.py"
 version_file_vars = {}
