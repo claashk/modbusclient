@@ -34,12 +34,12 @@ class ApiWrapper(object):
                  timeout=None,
                  connect=False,
                  unit=NO_UNIT):
-        self.__dict__['_api'] = api
-        self.__dict__['_client'] = Client(host=host,
-                                          port=port,
-                                          timeout=timeout,
-                                          connect=connect)
-        self.__dict__['unit'] = unit
+        self._api = api
+        self._client = Client(host=host,
+                              port=port,
+                              timeout=timeout,
+                              connect=connect)
+        self.unit = unit
 
     def __enter__(self):
         """Context Manager support
@@ -56,22 +56,6 @@ class ApiWrapper(object):
         """
         self.logout()
         self.disconnect()
-
-    def __getattr__(self, item):
-        """Get value of a single message
-
-        Return:
-            value: Value of message
-        """
-        return self.get(self._api[item])
-
-    def __setattr__(self, key, value):
-        """Set value of a single message
-
-        Return:
-            value: Value of message
-        """
-        self.set(self._api[key], value)
 
     def is_connected(self):
         """Check if this client is connected to a server
