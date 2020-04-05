@@ -1,5 +1,6 @@
 from ..protocol import NO_UNIT, DEFAULT_PORT, ModbusError, ILLEGAL_FUNCTION_ERROR
 from ..payload import Payload
+from ..api_wrapper import as_payload
 from .client import Client
 
 from logging import getLogger
@@ -84,6 +85,17 @@ class ApiWrapper(object):
         """
         self._client.disconnect()
 
+    def login(secret=None):
+        """Login using the provided secret
+        
+        Has to be implemented by derived class. Shall raise an exception
+        if login was not successfull.
+        
+        Arguments:
+            secret (object): Optional secret.
+        """
+        raise NotImplementedError("login")
+
     def is_logged_in(self):
         """Check if this client is currently logged in
 
@@ -114,16 +126,13 @@ class ApiWrapper(object):
         Return:
             value: Value of message
         """
-        if not isinstance(message, Payload):
-            message = self._api[message]
-
+        msg = as_payload(message, self._api)
         header, payload, err_code = await self._client.call(
-            function=message.reader,
-            start=message.address,
-            count=message.register_count,
+            function=msg.reader,
+            start=msg.address,
+            count=msg.register_count,
             unit=self.unit)
-
-        return message.decode(payload)
+        return msg.decode(payload)
 
     async def set(self, message, value):
         """Set value of a single message
@@ -139,25 +148,24 @@ class ApiWrapper(object):
         Return:
             value: Value of message
         """
-        if not isinstance(message, Payload):
-            message = self._api[message]
+        msg = as_payload(message, self._api)
 
         try:
             header, payload, err_code = await self._client.call(
-                function=message.writer,
-                start=message.address,
-                count=message.register_count,
-                payload=message.encode(value),
+                function=msg.writer,
+                start=msg.address,
+                count=msg.register_count,
+                payload=msg.encode(value),
                 unit=self.unit)
         except ModbusError as ex:
             err_code = ex.args[0]
             if err_code == ILLEGAL_FUNCTION_ERROR:
-                if not message.is_writable:
+                if not msg.is_writable:
                     raise ModbusError(err_code, "Message is read only")
 
                 if message.is_write_protected and not self.is_logged_in():
-                    raise ModbusError(err_code,
-                                      "Login required to modify this message")
+                    self.login() # Shall rise, if unsuccessful
+                    self.set(msg, value)
             raise
         return header
 
@@ -192,11 +200,11 @@ class ApiWrapper(object):
         """
         retval = []
         for key, value in settings.items():
-            msg = self._api[key]
+            msg = as_payload(key, self._api)
             if msg.is_writable:
                 try:
                     await self.set(msg, value)
-                    retval.append(msg)
+                    retval.append(key)
                 except Exception as ex:
                     logger.error("While setting message %s: %s", key, ex)
                 except:
