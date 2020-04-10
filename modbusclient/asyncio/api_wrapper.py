@@ -1,6 +1,5 @@
 from ..protocol import NO_UNIT, DEFAULT_PORT, ModbusError, ILLEGAL_FUNCTION_ERROR
-from ..payload import Payload
-from ..api_wrapper import as_payload
+from ..api_wrapper import as_payload, from_cache
 from .client import Client
 
 from logging import getLogger
@@ -127,6 +126,7 @@ class ApiWrapper(object):
             value: Value of message
         """
         msg = as_payload(message, self._api)
+        logger.debug("Retrieving {} ...".format(msg))
         header, payload, err_code = await self._client.call(
             function=msg.reader,
             start=msg.address,
@@ -164,7 +164,7 @@ class ApiWrapper(object):
                     raise ModbusError(err_code, "Message is read only")
 
                 if message.is_write_protected and not self.is_logged_in():
-                    self.login() # Shall rise, if unsuccessful
+                    await self.login() # Shall rise, if unsuccessful
                     return await self.set(msg, value)
             raise
         return msg.decode(payload)
@@ -178,7 +178,7 @@ class ApiWrapper(object):
                 are read.
 
         Return:
-            dict: Dictionary containing API message key and setting as value
+            dict: Dictionary containing Payload as key and setting as value
         """
         retval = dict()
         if selection is None:
@@ -191,6 +191,26 @@ class ApiWrapper(object):
                 except Exception as exc:
                     logger.error("While retrieving '%s': %s", msg, exc)
         return retval
+
+    async def cached_read(self, cache, selection=None):
+        """Read values from device, which are not found in cache
+
+        Arguments:
+            cache (dict): Cache with Payload instance as key
+            selection (iterable): Iterable of messages (API keys or Payload
+                objects) to read. If ``None``, all messages of the current API
+                are read.
+        Return:
+            dict: Dictionary containing Payload as key and setting as value
+        """
+        if selection is None:
+            selection = self._api.values()
+        cached, remaining = from_cache(selection=selection,
+                                       cache=cache,
+                                       api=self._api)
+        update = await self.read(remaining)
+        cached.update(update)
+        return cached
 
     async def set_from(self, settings):
         """Load settings from dictionary
