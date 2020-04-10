@@ -165,9 +165,9 @@ class ApiWrapper(object):
 
                 if message.is_write_protected and not self.is_logged_in():
                     self.login() # Shall rise, if unsuccessful
-                    self.set(msg, value)
+                    return await self.set(msg, value)
             raise
-        return header
+        return msg.decode(payload)
 
     async def save(self, selection=None):
         """Save current settings into dictionary

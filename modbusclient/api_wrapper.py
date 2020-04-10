@@ -180,9 +180,9 @@ class ApiWrapper(object):
 
                 if msg.is_write_protected and not self.is_logged_in():
                     self.login()
-                    self.set(msg, value)
+                    return self.set(msg, value)
             raise ModbusError(err_code)
-        return header
+        return msg.decode(payload)
 
     def save(self, selection=None):
         """Save current settings into dictionary
