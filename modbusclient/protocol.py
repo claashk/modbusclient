@@ -148,6 +148,18 @@ Note:
     implementation.
 """
 
+SingleWriteRequest = create_header("SingleWriteRequest", "H", "start")
+SingleWriteRequest.__doc__ = """Modbus Write Request Protocol Data Unit (PDU) for a single register
+
+Attributes:
+    start (int): Address of (first) register to write to
+
+Note:
+    A PDU usually starts with a single byte containing the function code, which
+    is part of the :class:`~modbusclient.ApplicationProtocolHeader` in this
+    implementation.
+"""
+
 ReadResponse = create_header("ReadResponse", "B", "size")
 ReadResponse.__doc__ = """Modbus Response Protocol Data Unit (PDU)
 
@@ -173,6 +185,18 @@ Note:
     implementation.
 """
 
+SingleWriteResponse = create_header("SingleWriteResponse", "H", "start")
+SingleWriteResponse.__doc__ = """Modbus Response Protocol Data Unit (PDU) for a single write
+
+Attributes:
+    start (int): Address of (first) register to write to
+
+Note:
+    A PDU usually starts with a single byte containing the function code, which
+    is part of the :class:`~modbusclient.ApplicationProtocolHeader` in this
+    implementation.
+"""
+
 Error = create_header("Error", "B", "exception_code")
 Error.__doc__= """Modbus Error Protocol Data Unit (PDU)
 
@@ -190,14 +214,16 @@ Note:
 REQUEST_TYPES = {
     READ_HOLDING_REGISTERS : ReadRequest,
     READ_INPUT_REGISTERS : ReadRequest,
-    WRITE_MULTIPLE_REGISTERS : WriteRequest
+    WRITE_MULTIPLE_REGISTERS : WriteRequest,
+    WRITE_SINGLE_REGISTER : SingleWriteRequest
     # TODO ...
 }
 
 RESPONSE_TYPES = {
     READ_HOLDING_REGISTERS : ReadResponse,
     READ_INPUT_REGISTERS : ReadResponse,
-    WRITE_MULTIPLE_REGISTERS : WriteResponse
+    WRITE_MULTIPLE_REGISTERS : WriteResponse,
+    WRITE_SINGLE_REGISTER : SingleWriteResponse
 }
 
 
@@ -224,7 +250,10 @@ def new_request(function, payload=b"", unit=NO_UNIT, transaction=0, **kwargs):
     logger.debug("Creating %s request", str(RequestType))
     if payload:
         kwargs['size'] = len(payload)
-    request = RequestType(**kwargs)
+
+    #Ignore arguments not recogised by RequestType
+    known_args = {k: kwargs[k] for k in kwargs.keys() & RequestType._fields}
+    request = RequestType(**known_args)
     nbytes = 2 + len(request) + kwargs.get('size', 0)
     header = ApplicationProtocolHeader(transaction=transaction,
                                        protocol=MODBUS_PROTOCOL_ID,
@@ -277,7 +306,7 @@ def parse_response_body(header, buffer):
         msg = response_type.from_buffer(buffer)
         payload = buffer[len(msg):]
 
-        if payload and (len(payload) != msg.size):
+        if payload and (len(payload) != getattr(msg, "size", 2)):
             err_code = MESSAGE_SIZE_ERROR
         else:
             err_code = NO_ERROR
