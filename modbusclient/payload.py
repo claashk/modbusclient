@@ -37,18 +37,17 @@ class Payload(object):
         self._writer = writer
         vars(self).update(kwargs)
 
-        if self._reader is None:
+        if self._reader is None and self.is_readable:
             if self.is_writable:
                 self._reader = READ_HOLDING_REGISTERS
             else:
                 self._reader = READ_INPUT_REGISTERS
 
-        if self._writer is None:
-            if self.is_writable:
-                if self.register_count == 1:
-                    self._writer = WRITE_SINGLE_REGISTER
-                else:
-                    self._writer = WRITE_MULTIPLE_REGISTERS
+        if self._writer is None and self.is_writable:
+            if self.register_count == 1:
+                self._writer = WRITE_SINGLE_REGISTER
+            else:
+                self._writer = WRITE_MULTIPLE_REGISTERS
 
     def __len__(self):
         """Get length of this message in bytes
@@ -139,6 +138,11 @@ class Payload(object):
             value cannot be written.
         """
         return self._writer
+
+    @property
+    def is_readable(self):
+        """Check if this message is readable"""
+        return 'r' in self._mode
 
     @property
     def is_writable(self):
