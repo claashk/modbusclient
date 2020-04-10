@@ -184,7 +184,7 @@ class ApiWrapper(object):
             raise ModbusError(err_code)
         return msg.decode(payload)
 
-    def save(self, selection=None):
+    def read(self, selection=None):
         """Save current settings into dictionary
 
         Arguments:
@@ -197,14 +197,16 @@ class ApiWrapper(object):
         retval = dict()
         if selection is None:
             selection = self._api.keys()
-        for msg in selection:
-            try:
-                retval[msg] = self.get(msg)
-            except Exception as exc:
-                logger.error("While retrieving %s: %s", msg, exc)
+        for key in selection:
+            msg = as_payload(key, self._api)
+            if msg.is_readable:
+                try:
+                    retval[msg] = self.get(msg)
+                except Exception as exc:
+                    logger.error("While retrieving %s: %s", msg, exc)
         return retval
 
-    def load(self, settings):
+    def set_from(self, settings):
         """Load settings from dictionary
 
         Arguments:

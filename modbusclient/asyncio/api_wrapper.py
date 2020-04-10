@@ -169,7 +169,7 @@ class ApiWrapper(object):
             raise
         return msg.decode(payload)
 
-    async def save(self, selection=None):
+    async def read(self, selection=None):
         """Save current settings into dictionary
 
         Arguments:
@@ -189,7 +189,7 @@ class ApiWrapper(object):
                 logger.error("While retrieving '%s': %s", msg, exc)
         return retval
 
-    async def load(self, settings):
+    async def set_from(self, settings):
         """Load settings from dictionary
 
         Arguments:
