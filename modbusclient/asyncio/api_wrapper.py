@@ -55,7 +55,7 @@ class ApiWrapper(object):
 
         Logs out and disconnects from the server.
         """
-        self.logout()
+        await self.logout()
         self.disconnect()
 
     def is_connected(self):
@@ -85,7 +85,7 @@ class ApiWrapper(object):
         """
         self._client.disconnect()
 
-    def login(secret=None):
+    async def login(secret=None):
         """Login using the provided secret
         
         Has to be implemented by derived class. Shall raise an exception
@@ -106,7 +106,7 @@ class ApiWrapper(object):
         """
         return False
 
-    def logout(self):
+    async def logout(self):
         """Log out client
 
         This is a stub. Intended to be implemented by derived classes.
@@ -173,20 +173,23 @@ class ApiWrapper(object):
         """Save current settings into dictionary
 
         Arguments:
-            selection (iterable): Iterable of messages (API keys) to save. If
-                ``None``, all messages of the current API are backed up.
+            selection (iterable): Iterable of messages (API keys or Payload
+                objects) to read. If ``None``, all messages of the current API
+                are read.
 
         Return:
             dict: Dictionary containing API message key and setting as value
         """
         retval = dict()
         if selection is None:
-            selection = self._api.keys()
-        for msg in selection:
-            try:
-                retval[msg] = await self.get(msg)
-            except Exception as exc:
-                logger.error("While retrieving '%s': %s", msg, exc)
+            selection = self._api.values()
+        for key in selection:
+            msg = as_payload(key, self._api)
+            if msg.is_readable:
+                try:
+                    retval[msg] = await self.get(msg)
+                except Exception as exc:
+                    logger.error("While retrieving '%s': %s", msg, exc)
         return retval
 
     async def set_from(self, settings):
@@ -194,17 +197,16 @@ class ApiWrapper(object):
 
         Arguments:
             settings (dict): Dictionary with settings as returned by
-                 :meth:`~Client.save`
+                 :meth:`Client.read`
         Return:
-            list: Successfully modified settings
+            dict: Successfully modified settings with their respective value
         """
-        retval = []
+        retval = dict()
         for key, value in settings.items():
             msg = as_payload(key, self._api)
             if msg.is_writable:
                 try:
-                    await self.set(msg, value)
-                    retval.append(key)
+                    retval[msg] = await self.set(msg, value)
                 except Exception as ex:
                     logger.error("While setting message %s: %s", key, ex)
                 except:

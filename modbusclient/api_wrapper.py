@@ -188,15 +188,16 @@ class ApiWrapper(object):
         """Save current settings into dictionary
 
         Arguments:
-            selection (iterable): Iterable of messages (API keys) to save. If
-                ``None``, all messages of the current API are backed up.
+            selection (iterable): Iterable of messages (API keys or Payload
+                objects) to read. If ``None``, all messages of the current API
+                are read.
 
         Return:
             dict: Dictionary containing API message key and setting as value
         """
         retval = dict()
         if selection is None:
-            selection = self._api.keys()
+            selection = self._api.values()
         for key in selection:
             msg = as_payload(key, self._api)
             if msg.is_readable:
@@ -211,17 +212,16 @@ class ApiWrapper(object):
 
         Arguments:
             settings (dict): Dictionary with settings as returned by
-                 :meth:`~Client.save`
+                 :meth:`Client.read`
         Return:
-            list: Successfully modified settings
+            dict: Successfully modified settings with their respective value
         """
-        retval = []
+        retval = dict()
         for key, value in settings.items():
             msg = as_payload(key, self._api)
             if msg.is_writable:
                 try:
-                    self.set(msg, value)
-                    retval.append(key)
+                    retval[msg] = self.set(msg, value)
                 except Exception as ex:
                     logger.error("While setting message %s: %s", key, ex)
                 except:
