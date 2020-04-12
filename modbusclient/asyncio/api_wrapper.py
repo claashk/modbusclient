@@ -149,13 +149,14 @@ class ApiWrapper(object):
             value: Value of message
         """
         msg = as_payload(message, self._api)
+        encoded_payload = msg.encode(value)
 
         try:
             header, payload, err_code = await self._client.call(
                 function=msg.writer,
                 start=msg.address,
                 count=msg.register_count,
-                payload=msg.encode(value),
+                payload=encoded_payload,
                 unit=self.unit)
         except ModbusError as ex:
             err_code = ex.args[0]
@@ -167,6 +168,12 @@ class ApiWrapper(object):
                     await self.login() # Shall rise, if unsuccessful
                     return await self.set(msg, value)
             raise
+
+        if not payload:
+            # Some functions do not return the payload. This seems to be the
+            # next best thing to do.
+            payload = encoded_payload
+
         return msg.decode(payload)
 
     async def read(self, selection=None):

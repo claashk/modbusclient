@@ -201,7 +201,7 @@ class Client(object):
                 buffer = await self._reader.readexactly(header.length - 2)
         except IncompleteReadError:
             logger.warn("Connection closed unexpectedly. Cleaning up ...")
-            self.diconnect()
+            self.disconnect()
             return
 
         payload, err_code = parse_response_body(header, buffer)
