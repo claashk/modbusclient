@@ -21,7 +21,7 @@ class Payload(object):
             to bytes and back. Must provide methods ``encode`` and ``decode``.
         address (int): Starting address (register number) of the message
         mode (str): Permissible read write modes. Defaults to read only (``'r'``)
-        **kwargs (dict): Additional properties added verbatim to this instance.
+        **kwargs: Additional properties added verbatim to this instance.
     """
     def __init__(self,
                  dtype,
