@@ -1,6 +1,4 @@
-
-#from asyncio import open_connection, Lock , get_running_loop
-from asyncio import open_connection, Lock , get_event_loop, IncompleteReadError
+import asyncio
 from logging import getLogger
 
 from ..protocol import ApplicationProtocolHeader, parse_response_body
@@ -23,6 +21,8 @@ class Client(object):
            the default timeout. Currently not used.
         max_transactions (int): Max. number of transactions send in parallel to
             the server. Defaults to 3.
+        max_retries (int): Maximum number of connection retries. Defaults to 5.
+            0 disables retries while ``None`` is equivalent to infinite retries.
         loop (EventLoop): If set to ``None``, event loop will be determined by
             the method. Defaults to ``None``. Deprecated from python 3.7 onwards.
     """
@@ -31,18 +31,20 @@ class Client(object):
                  port=502,
                  timeout=None,
                  max_transactions=3,
+                 max_retries=5,
                  loop=None):
         self._reader = None
         self._writer = None
         self._host = host
         self._port = port
+        self._max_retries = int(max_retries) if max_retries is not None else None
 
         # used only because get_running_loop is not available in python < 3.7 and
         # the call to get_event_loop used instead is apparently expensive.
         self._loop = loop
 
         self._transactions = max_transactions * [(None, None)]
-        self._read_lock = Lock()
+        self._read_lock = asyncio.Lock()
 
     @property
     def max_transactions(self):
@@ -51,7 +53,7 @@ class Client(object):
     @property
     def loop(self):
         if self._loop is None:
-            self._loop = get_event_loop()
+            self._loop = asyncio.get_event_loop()
         return self._loop
 
     async def __aenter__(self):
@@ -74,20 +76,37 @@ class Client(object):
 
         return True
 
-    async def connect(self, host=None, port=None):
+    async def connect(self, host=None, port=None, max_retries=None):
         """Connect this client to a host
 
         Arguments:
             host (string): IP Adress of the host
             port (int): Port to use. Defaults to 502
+            max_retries (int): Maximum number of retries.
         """
         self.disconnect()
         if host is not None:
             self._host = host
         if port is not None:
             self._port = port
-        logger.debug("Connecting to %s:%s ...", self._host, self._port)
-        self._reader, self._writer = await open_connection(self._host, self._port)
+        if max_retries is not None:
+            self._max_retries = max_retries
+
+        logger.debug(f"Connecting to {self._host}:{self._port} ...")
+        retry = 0
+        while True:
+            try:
+                r, w = await asyncio.open_connection(self._host, self._port)
+                self._reader, self._writer = r, w
+                return
+            except OSError as ex:
+                retry += 1
+                if self._max_retries is None or retry < self._max_retries:
+                    logger.debug(f"Connection failed: {ex}. Retry {retry} of "
+                                 f"{self._max_retries}")
+                    await asyncio.sleep(0.5)
+                else:
+                    raise
 
     def disconnect(self):
         """Disconnect this client
@@ -169,8 +188,8 @@ class Client(object):
             logger.debug("Sent request with transaction ID %d.", transaction)
             await self._writer.drain()
         except Exception as exc:
-            logger.warn("Error sending request with transaction ID %d: %s",
-                         transaction, str(exc))
+            logger.warning(f"Error sending request with transaction ID "
+                           f"{transaction}: {exc}")
             future.set_exception(exc)
         self._transactions[transaction] = (header, future)
         return header, future
@@ -199,19 +218,19 @@ class Client(object):
                 buffer = await self._reader.readexactly(nbytes)
                 header = parse_response_header(buffer)
                 buffer = await self._reader.readexactly(header.length - 2)
-        except IncompleteReadError:
-            logger.warn("Connection closed unexpectedly. Cleaning up ...")
+        except asyncio.IncompleteReadError:
+            logger.warning("Connection closed unexpectedly. Cleaning up ...")
             self.disconnect()
             return
 
         payload, err_code = parse_response_body(header, buffer)
-        logger.debug("Got response: %s, %s, %s", header, payload, err_code)
+        logger.debug(f"Got response: {header}, {payload}, {err_code}")
 
         try:
             req, future = self._transactions[header.transaction]
             self._transactions[header.transaction] = (None, None)
         except IndexError:
-            raise ModbusError("Got unknown transaction ID %d", header.transaction)
+            raise ModbusError(f"Got unknown transaction ID {header.transaction}")
 
         assert(header.transaction == req.transaction)
 
@@ -255,7 +274,7 @@ class Client(object):
         header, future = await self.request(function, **kwargs)
         while not future.done():
             await self.get_response()
-        return future.result() #will raise, if an exception is set
+        return future.result()  # will raise, if an exception is set
 
     async def assert_connected(self):
         """Assert client is connected
@@ -287,5 +306,5 @@ class Client(object):
             for i, (header, future) in enumerate(self._transactions):
                 if future is None:
                     return i
-            logger.debug("Max. transactions (%d) active", self.max_transactions)
+            logger.debug(f"Max. transactions ({self.max_transactions}) active")
             await self.get_response()
