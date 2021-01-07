@@ -167,7 +167,7 @@ class Client(object):
 
         Arguments:
             function (int): Function code
-            **kwargs (dict): Keyword arguments passed verbatim to
+            **kwargs: Keyword arguments passed verbatim to
                 :meth:`~modbus.Client.request`
 
         Return:
