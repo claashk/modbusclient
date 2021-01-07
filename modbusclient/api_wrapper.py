@@ -55,13 +55,13 @@ class ApiWrapper(object):
         unit (int): Modbus unit ID: Defaults to NO_UNIT.
     """
     def __init__(self,
-                 api=dict(),
+                 api=None,
                  host="",
                  port=DEFAULT_PORT,
                  timeout=None,
                  connect=False,
                  unit=NO_UNIT):
-        self._api = api
+        self._api = api if api is not None else dict()
         self._client = Client(host=host,
                               port=port,
                               timeout=timeout,
@@ -96,10 +96,8 @@ class ApiWrapper(object):
         """Connect this client to a host
 
         Arguments:
-            address (string): IP Adress of the host
-            port (int): Port to use. Defaults to 502
-            timeout (float): Timeout in seconds. If not set, it will be set to
-               the default timeout.
+            **kwargs: Keyword arguments assed verbatim to
+                :meth:`modbusclient.Client.connect`
         """
         self._client.connect(**kwargs)
 
@@ -223,8 +221,8 @@ class ApiWrapper(object):
             if msg.is_readable:
                 try:
                     retval[msg] = self.get(msg)
-                except Exception as exc:
-                    logger.error("While retrieving %s: %s", msg, exc)
+                except Exception as ex:
+                    logger.error(f"While retrieving {msg}: {ex}")
         return retval
 
     def cached_read(self, cache, selection=None):
@@ -262,7 +260,7 @@ class ApiWrapper(object):
                 try:
                     retval[msg] = self.set(msg, value)
                 except Exception as ex:
-                    logger.error("While setting message %s: %s", key, ex)
+                    logger.error(f"While setting message {key}: {ex}")
                 except:
-                    logger.error("While setting message %s: Unknown error", key)
+                    logger.error(f"While setting message {key}: Unknown error")
         return retval
