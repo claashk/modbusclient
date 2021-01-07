@@ -189,8 +189,12 @@ class Enum(Payload):
     a string describing the meaning.
 
     Arguments:
+        dtype (object): Datatype object capable of converting from python object
+            to bytes and back. Must provide methods ``encode`` and ``decode``.
+        address (int): Starting address (register number) of the message
         choices(dict): Dictionary mapping enum values to values
-
+        mode (str): Permissible read write modes. Defaults to read only (``'r'``)
+        **kwargs: Additional properties added verbatim to this instance.
     """
     def __init__(self, dtype, address, choices=dict(), mode="r", **kwargs):
         super().__init__(dtype, address=address, mode=mode, **kwargs)
@@ -204,7 +208,12 @@ class Fixpoint(Payload):
     """Specialisation of :class:´Payload` for fixed point floats
 
     Arguments:
-        dtype ()
+        dtype (object): Datatype object capable of converting from python object
+            to bytes and back. Must provide methods ``encode`` and ``decode``.
+        address (int): Starting address (register number) of the message
+        mode (str): Permissible read write modes. Defaults to read only (``'r'``)
+        digits (int): Number of decimal digits. Defaults to 0.
+        **kwargs: Additional properties added verbatim to this instance.
     """
     def __init__(self, dtype, address, mode="r", digits=0, **kwargs):
         super().__init__(dtype, address=address, mode=mode, **kwargs)
