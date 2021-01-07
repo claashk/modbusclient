@@ -28,13 +28,13 @@ class ApiWrapper(object):
         unit (int): Modbus unit ID: Defaults to NO_UNIT.
     """
     def __init__(self,
-                 api=dict(),
+                 api=None,
                  host="",
                  port=DEFAULT_PORT,
                  timeout=None,
                  max_transactions=3,
                  unit=NO_UNIT):
-        self._api = api
+        self._api = api if api is not None else dict()
         self._client = Client(host=host,
                               port=port,
                               timeout=timeout,
@@ -84,7 +84,7 @@ class ApiWrapper(object):
         """
         self._client.disconnect()
 
-    async def login(secret=None):
+    async def login(self, secret=None):
         """Login using the provided secret
         
         Has to be implemented by derived class. Shall raise an exception
