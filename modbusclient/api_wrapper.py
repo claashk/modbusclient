@@ -4,23 +4,88 @@ from .client import Client
 from .payload import Payload
 
 from logging import getLogger
+import re
 
 logger = getLogger('modbusclient')
 
 
-def as_payload(msg, api):
+def iter_matching_names(name, api):
+    """Iterate over all payloads matching name pattern
+
+    The ~modbusclient.Payload objects in api must have a ``name`` attribute for
+    this to work.
+
+    Arguments:
+        name (str): Regular expression pattern for the name. Special characters
+            ``'*'`` and and ``'?'`` are allowed, too.
+        api (dict): Api definition
+
+    Yield:
+        ~modbusclient.Payload: Payload for each pattern matching `name`
+    """
+    pattern = re.compile(name.replace("*", ".*").replace("?", "."))
+    for m in api.values():
+        if pattern.match(m.name):
+            yield m
+
+
+def as_payload(msg, api, key_type=None):
     """Lookup message by key
     
     Arguments:
         msg (Payload or key): Either a payload or a 
         api (dict): Api definition
+        key_type (type): Optional key type. If provided, msg is converted to
+           key_type before the API lookup is performed. Defaults to ``None``.
         
     Return:
-        ~modbuclient.Payload: Payload instance described by `msg`
+        ~modbusclient.Payload: Payload instance described by `msg`
+
+    Raises:
+        KeyError: If msg is not a valid API key.
+
+        ValueError: If msg cannot be converted to the API key_type
     """
     if isinstance(msg, Payload):
         return msg
+    if key_type is not None:
+        msg = key_type(msg)
     return api[msg]
+
+
+def iter_payloads(messages, api, key_type=None):
+    """Iterate over all payloads defined in various forms
+
+    Arguments:
+       messages(Payload, key_type, iterable): Messages to add. If this is a
+           :class:`~modbusclient.Payload` object, the object is yielded as a
+           single value. If `messages` is convertible `key_type`, the resulting
+           key is converted to a :class:`~modbusclient.Payload` objected via the
+           `api` before it is yielded. If the above attempts are not successful
+           and `messages` is a string, then lookup via :func:`find_names` is
+           attempted next and the results are yielded. Otherwise ``messages``
+           is interpreted as an iterable and the above matching strategy is
+           applied to each of its elements.
+        api (dict): Api definition
+        key_type (type): Optional key type. If provided, msg is converted to
+           key_type before the API lookup is performed. Defaults to ``None``.
+
+    Yield:
+        ~modbusclient.Payload: Payload instance described by `msg`
+    """
+    if not isinstance(messages, (list, tuple)):
+        try:
+            yield as_payload(messages, api, key_type)
+            return
+        except ValueError:
+            pass
+
+        if isinstance(messages, str):
+            yield from iter_matching_names(messages, api)
+            return
+
+    for message in messages:
+        yield from iter_payloads(message, api=api, key_type=key_type)
 
 
 def from_cache(selection, cache, api):
