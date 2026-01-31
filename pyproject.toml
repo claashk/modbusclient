@@ -13,10 +13,10 @@ name = "modbusclient"
 version = "0.2.0"
 description = "Modbusclient with support for asynchronous operation"
 authors = [
-    { name = "claashk", email = "claashk@..." }
+    { name = "claashk", email = "claashk@no.net" }
 ]
 maintainers = [
-    { name = "claashk", email = "claashk@..." }
+    { name = "claashk", email = "claashk@no.net" }
 ]
 readme = "README.md"
 requires-python = ">=3.10"
@@ -58,7 +58,6 @@ skip_missing_interpreters = true
 [tool.tox.env_run_base]
 deps = [
     "setuptools",
-    "h5netcdf>=1.0",
     "tomli"
 ]
 commands = [["python", "-m", "unittest", "discover", "-v", "-s", "tests", "-p", "*.py"]]
@@ -68,7 +67,6 @@ wheel_build_env = ".pkg"
 [tool.tox.env.py310]
 deps = [
     "setuptools",
-    "h5netcdf>=1.0",
     "tomli",
     "coverage",
     "cyclonedx-bom"
