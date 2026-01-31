@@ -5,4 +5,4 @@ modbusclient.api\_wrapper module
    :members:
    :special-members: __enter__, __exit__
    :show-inheritance:
-   :undoc-members:
+   :no-undoc-members:
