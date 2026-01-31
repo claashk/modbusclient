@@ -18,7 +18,7 @@ jobs:
           - name: Upload artifact
             uses: actions/upload-pages-artifact@v3
             with:
-                path: ".tox/py312/tmp/doctree"
+                path: "dist/doc"
 
     deploy:
         needs: build-docs
