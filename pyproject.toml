@@ -83,7 +83,8 @@ description = "invoke sphinx-build to build the HTML docs"
 usedevelop = true
 deps = [
     "sphinx>=8.1",
-    "sphinx-rtd-theme"
+    "sphinx-rtd-theme",
+    "autobahn"
 ]
 commands = [
     ["sphinx-apidoc", "--implicit-namespaces", "-e", "-o", "doc/package", "modbusclient"],
