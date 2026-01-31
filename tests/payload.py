@@ -1,24 +1,31 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-from modbusclient import Payload, AtomicType
+from datetime import datetime, timezone, timedelta
+from modbusclient import Payload, AtomicType, Timestamp
 from modbusclient.protocol import READ_INPUT_REGISTERS
 
 import numpy as np
+from typing import Any
 
 import unittest
 
 
 class PayloadTestCase(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test parameters
         """
         self.float = AtomicType("f")
         self.int = AtomicType("i")
         self.short = AtomicType("H")
+        self.long = AtomicType("l")
 
-    def new(self, dtype=None, address=1000, **kwargs):
+    def new(
+        self,
+        dtype: AtomicType | None = None,
+        address: int = 1000,
+        **kwargs: dict[str, Any]
+    ) -> Payload:
         if dtype is None:
             dtype = self.int
         return Payload(dtype, address, **kwargs)
@@ -33,9 +40,9 @@ class PayloadTestCase(unittest.TestCase):
         self.assertFalse(p1.is_writable)
         self.assertFalse(p1.is_write_protected)
 
-        p2 = self.new(address=2000, mode='rw', name="power", unit="kW")
+        p2 = self.new(address=2000, mode='rw', name="power", units="kW")
         self.assertEqual(p2.name, "power")
-        self.assertEqual(p2.unit, "kW")
+        self.assertEqual(p2.units, "kW")
         self.assertTrue(p2.is_writable)
         self.assertFalse(p2.is_write_protected)
 
@@ -81,10 +88,20 @@ class PayloadTestCase(unittest.TestCase):
         self.assertTrue(p2 != p3)
         self.assertFalse(p1 != p4)
 
+    def test_timestamp(self) -> None:
+        p = Timestamp(dtype=self.long, address=666, mode="r", units="seconds")
+        t = datetime.now(tz=timezone.utc)
+        tout = p.decode(p.encode(t))
+
+        t0 = datetime(1970, 1, 1).astimezone(timezone.utc)
+        dt = int((t - t0) / timedelta(seconds=1))
+
+        self.assertEqual(tout, t0 + timedelta(seconds=dt))
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(PayloadTestCase)
 
 
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=2).run( suite() )
+    unittest.TextTestRunner(verbosity=2).run(suite())
