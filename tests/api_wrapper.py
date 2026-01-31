@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 from modbusclient import Payload, AtomicType
 from modbusclient import as_payload, iter_payloads
 

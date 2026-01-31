@@ -4,21 +4,21 @@ from .client import Client
 from .payload import Payload
 
 from logging import getLogger
+from typing import Iterable, Any
 import re
 
 logger = getLogger('modbusclient')
 
 
-def iter_matching_names(name, api):
+def iter_matching_names(name:str, api: dict[str, Payload]) -> Iterable[Payload]:
     """Iterate over all payloads matching name pattern
 
     The ~modbusclient.Payload objects in api must have a ``name`` attribute for
     this to work.
 
-    Arguments:
-        name (str): Regular expression pattern for the name. Special characters
-            ``'*'`` and and ``'?'`` are allowed, too.
-        api (dict): Api definition
+        name: Regular expression pattern for the name. Special characters
+            ``'*'`` and ``'?'`` are supported, too.
+        api: Api definition
 
     Yield:
         ~modbusclient.Payload: Payload for each pattern matching `name`
@@ -29,11 +29,11 @@ def iter_matching_names(name, api):
             yield m
 
 
-def as_payload(msg, api, key_type=None):
+def as_payload(msg: Payload | Any, api, key_type=None):
     """Lookup message by key
     
     Arguments:
-        msg (Payload or key): Either a payload or a 
+        msg (Payload or key): Either a payload or any object convertible to a paylo
         api (dict): Api definition
         key_type (type): Optional key type. If provided, msg is converted to
            key_type before the API lookup is performed. Defaults to ``None``.

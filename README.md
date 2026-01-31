@@ -1,8 +1,6 @@
 # Overview
-A very simple modbus implementation. 
+A Modbus library designed to work with the vzlogger file protocol.
 
-# Rationale
-There is always room for one more modbus implementation.
 
 # Documentation
 https://claashk.github.io/modbusclient

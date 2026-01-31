@@ -1,3 +1,7 @@
+from importlib.metadata import version
+
+__version__ = version(__package__)
+
 from .protocol import ApplicationProtocolHeader, Error, new_request
 from .protocol import parse_response_body, parse_response_header
 from .protocol import ReadRequest, WriteRequest, ReadResponse, WriteResponse

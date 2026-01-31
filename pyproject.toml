@@ -1,0 +1,93 @@
+[build-system]
+requires = [
+    "setuptools >= 78.0",
+    "wheel",
+    "tomli",
+    "sphinx >= 8.1",
+    "sphinx-rtd-theme"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "modbusclient"
+version = "0.2.0"
+description = "Modbusclient with support for asynchronous operation"
+authors = [
+    { name = "claashk", email = "claashk@..." }
+]
+maintainers = [
+    { name = "claashk", email = "claashk@..." }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    'numpy',
+]
+license = { text = "BSD 3-Clause License" }
+keywords = ["Modbus", "async"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 4 - Beta"
+]
+
+[project.urls]
+homepage = "https://github.com/claashk/modbusclient"
+documentation = "https://claashk.github.io/modbusclient"
+repository = "https://github.com/claashk/modbusclient"
+
+[tool.setuptools]
+packages = ["modbusclient"]
+
+[tool.coverage.run]
+omit = ["*/tests/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["*.py"]
+
+[tool.tox]
+envlist = [
+    "py310",
+    "py311",
+    "py312",
+    "py313",
+    "py314"
+]
+skip_missing_interpreters = true
+
+[tool.tox.env_run_base]
+deps = [
+    "setuptools",
+    "h5netcdf>=1.0",
+    "tomli"
+]
+commands = [["python", "-m", "unittest", "discover", "-v", "-s", "tests", "-p", "*.py"]]
+package = "wheel"
+wheel_build_env = ".pkg"
+
+[tool.tox.env.py310]
+deps = [
+    "setuptools",
+    "h5netcdf>=1.0",
+    "tomli",
+    "coverage",
+    "cyclonedx-bom"
+]
+commands = [
+    ["coverage", "run", "-m", "unittest", "discover", "-v", "-s", "tests", "-p", "*.py"],
+    ["coverage", "report", "-m"],
+    ["coverage", "html"],
+    ["python", "-m", "cyclonedx_py", "environment", "--pyproject", "pyproject.toml", "--outfile", "sbom.json"]
+]
+
+[tool.tox.env.docs]
+description = "invoke sphinx-build to build the HTML docs"
+usedevelop = true
+deps = [
+    "sphinx>=8.1",
+    "sphinx-rtd-theme"
+]
+commands = [
+    ["sphinx-apidoc", "--implicit-namespaces", "-e", "-o", "doc/package", "modbusclient"],
+    ["sphinx-build", "-b", "html", "--color", "-d", "{envtmpdir}/doctrees", "doc", "dist/doc", { replace = "posargs", default = [], extend = true }]
+]
