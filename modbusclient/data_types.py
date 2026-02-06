@@ -122,7 +122,7 @@ class String(AtomicType):
 
     @override
     def decode(self, buffer: bytes) -> str:
-        return super().decode(buffer).decode(self._encoding)
+        return super().decode(buffer).decode(self._encoding).rstrip("\x00")
 
 
 def swap_words(arr: bytes) -> bytes:
