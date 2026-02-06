@@ -4,24 +4,29 @@ from .client import Client
 from .payload import Payload
 
 from logging import getLogger
-from typing import Iterable, Any
+from typing import Any
+from collections.abc import Iterable
 import re
 
 logger = getLogger('modbusclient')
 
 
-def iter_matching_names(name:str, api: dict[str, Payload]) -> Iterable[Payload]:
+def iter_matching_names(
+    name: str,
+    api: dict[object, Payload]
+) -> Iterable[Payload]:
     """Iterate over all payloads matching name pattern
 
-    The ~modbusclient.Payload objects in api must have a ``name`` attribute for
-    this to work.
+    :class:`~modbusclient.Payload` values in ``api`` must have a ``name``
+    attribute for this to work.
 
+    Args:
         name: Regular expression pattern for the name. Special characters
             ``'*'`` and ``'?'`` are supported, too.
         api: Api definition
 
     Yield:
-        ~modbusclient.Payload: Payload for each pattern matching `name`
+        Payload for each pattern matching `name`
     """
     pattern = re.compile(name.replace("*", ".*").replace("?", "."))
     for m in api.values():
@@ -29,22 +34,25 @@ def iter_matching_names(name:str, api: dict[str, Payload]) -> Iterable[Payload]:
             yield m
 
 
-def as_payload(msg: Payload | Any, api, key_type=None):
+def as_payload(
+    msg: Payload | object,
+    api: dict[object, Payload],
+    key_type: type | None = None
+) -> Payload:
     """Lookup message by key
     
-    Arguments:
-        msg (Payload or key): Either a payload or any object convertible to a paylo
-        api (dict): Api definition
-        key_type (type): Optional key type. If provided, msg is converted to
-           key_type before the API lookup is performed. Defaults to ``None``.
+    Args:
+        msg: Either a payload or any object convertible to a Payload object
+        api: API definition
+        key_type: Optional key type. If provided, ``msg`` is converted to
+           ``key_type`` before the API lookup is performed. Defaults to ``None``.
         
     Return:
-        ~modbusclient.Payload: Payload instance described by `msg`
+        Payload instance described by ``msg``
 
     Raises:
-        KeyError: If msg is not a valid API key.
-
-        ValueError: If msg cannot be converted to the API key_type
+        KeyError: If ``msg`` is not a valid API key.
+        ValueError: If ``msg`` cannot be converted to the API key_type
     """
     if isinstance(msg, Payload):
         return msg
@@ -53,25 +61,27 @@ def as_payload(msg: Payload | Any, api, key_type=None):
     return api[msg]
 
 
-def iter_payloads(messages, api, key_type=None):
+def iter_payloads(
+    messages: Payload | type | str | Iterable[Payload | type | str],
+    api: dict[object, Payload],
+    key_type: type | None = None
+) -> Iterable[Payload]:
     """Iterate over all payloads defined in various forms
 
-    Arguments:
-       messages(Payload, key_type, iterable): Messages to add. If this is a
-           :class:`~modbusclient.Payload` object, the object is yielded as a
-           single value. If `messages` is convertible `key_type`, the resulting
-           key is converted to a :class:`~modbusclient.Payload` objected via the
-           `api` before it is yielded. If the above attempts are not successful
-           and `messages` is a string, then lookup via :func:`find_names` is
-           attempted next and the results are yielded. Otherwise ``messages``
-           is interpreted as an iterable and the above matching strategy is
-           applied to each of its elements.
-        api (dict): Api definition
-        key_type (type): Optional key type. If provided, msg is converted to
-           key_type before the API lookup is performed. Defaults to ``None``.
+    Args:
+        messages: Messages to add. If this is a single
+            :class:`~modbusclient.Payload` object, the functions yields it back.
+            In case it is a single object of type ``key_type``, the functions the
+            associated :class:`~modbusclient.Payload` object from ``api``.
+            In case of a string, yields the result of :func:`find_names`.
+            In any other case, ``messages`` is interpreted as an iterable and the
+            above matching strategy is applied to each of its elements.
+        api: API definition
+        key_type: Optional key type. If provided, ``msg`` is converted to
+           to this type before the API lookup is performed. Defaults to ``None``.
 
     Yield:
-        ~modbusclient.Payload: Payload instance described by `msg`
+        Payload instance described by `msg`
     """
     if not isinstance(messages, (list, tuple)):
         try:
@@ -84,11 +94,21 @@ def iter_payloads(messages, api, key_type=None):
             yield from iter_matching_names(messages, api)
             return
 
-    for message in messages:
-        yield from iter_payloads(message, api=api, key_type=key_type)
+    for msg in messages:
+        yield from iter_payloads(msg, api=api, key_type=key_type)
 
 
-def from_cache(selection, cache, api):
+def from_cache(
+    selection: Iterable[Payload | object],
+    cache: dict[Payload, object],
+    api: dict[object, Payload]
+) -> tuple[dict[Payload, object], list[Payload]]:
+    """Extract messages from cache
+
+    Extracts messages defined in ``api`` from ``selection`` and returns
+
+
+    """
     remaining = []
     found = dict()
     for key in selection:
@@ -100,10 +120,10 @@ def from_cache(selection, cache, api):
     return found, remaining
 
 
-class ApiWrapper(object):
+class ApiWrapper:
     """Default API implementation to quickly
 
-    Arguments:
+    Args:
         api (dict): Dictionary containing the API definition. Should contain
             a string with desired method name as key and a
             :class:`~modbusclient.payload.Payload` object as value.
@@ -119,13 +139,15 @@ class ApiWrapper(object):
     Attributes:
         unit (int): Modbus unit ID: Defaults to NO_UNIT.
     """
-    def __init__(self,
-                 api=None,
-                 host="",
-                 port=DEFAULT_PORT,
-                 timeout=None,
-                 connect=False,
-                 unit=NO_UNIT):
+    def __init__(
+        self,
+        api=None,
+        host="",
+        port=DEFAULT_PORT,
+        timeout=None,
+        connect=False,
+        unit=NO_UNIT
+    ) -> None:
         self._api = api if api is not None else dict()
         self._client = Client(host=host,
                               port=port,
