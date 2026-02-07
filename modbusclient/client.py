@@ -3,17 +3,17 @@ import socket
 
 from .protocol import ApplicationProtocolHeader, NO_UNIT, DEFAULT_PORT
 from .protocol import new_request, parse_response_header, parse_response_body
-from .protocol import INVALID_TRANSACTION_ID, UNIT_MISMATCH
+from .error_codes import INVALID_TRANSACTION_ID, UNIT_MISMATCH
 
 
-class Client(object):
+class Client:
     """Modbus client
 
     Modbus client to send function calls to a server and receive the respective
     responses. Can be used in a with block.
 
-    Arguments:
-        address (string): IP Adress of the host. If empty, no connection will be
+    Args:
+        address (string): IP Address of the host. If empty, no connection will be
             attempted. Defaults to the empty string.
         port (int): Port to use. Defaults to 502
         timeout (float): Timeout in seconds. If not set, it will be set to
@@ -30,9 +30,9 @@ class Client(object):
     def __init__(self, host="", port=DEFAULT_PORT, timeout=None, connect=True):
         self._socket = None
 
-        self.host = host
-        self.port = port
-        self.timeout = timeout
+        self.host: str = host
+        self.port: int = port
+        self.timeout: int | None = timeout
 
         if self.host and connect:
             self.connect()
