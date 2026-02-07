@@ -95,7 +95,6 @@ class Payload:
 
         Return:
             str: equivalent of ``hash(self.address)``
-
         """
         return hash(self._address)
 
@@ -248,9 +247,9 @@ class Fixpoint(Payload):
     Args:
         dtype: Datatype object capable of converting from python object
             to bytes and back. Must provide methods ``encode`` and ``decode``.
-        address (int): Starting address (register number) of the message
-        mode (str): Permissible read write modes. Defaults to read only (``'r'``)
-        digits (int): Number of decimal digits. Defaults to 0.
+        address: Starting address (register number) of the message
+        mode: Permissible read write modes. Defaults to read only (``'r'``)
+        digits: Number of decimal digits. Defaults to 0.
         **kwargs: Additional properties added verbatim to this instance.
     """
     _scale: int
