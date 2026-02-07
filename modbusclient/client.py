@@ -1,4 +1,4 @@
-
+from collections.abc import Generator
 import socket
 
 from .protocol import ApplicationProtocolHeader, NO_UNIT, DEFAULT_PORT
@@ -7,74 +7,81 @@ from .error_codes import INVALID_TRANSACTION_ID, UNIT_MISMATCH
 
 
 class Client:
-    """Modbus client
+    """Synchronous Modbus client
 
-    Modbus client to send function calls to a server and receive the respective
-    responses. Can be used in a with block.
+    Sends function calls to a server and receives the respective responses.
+    Supports the context manager protocol.
 
     Args:
-        address (string): IP Address of the host. If empty, no connection will be
-            attempted. Defaults to the empty string.
-        port (int): Port to use. Defaults to 502
-        timeout (float): Timeout in seconds. If not set, it will be set to
-           the default timeout.
-        connect (bool): If True, the client immediately connects if an address
-           is specified. Otherwise a call to :meth:`connect` or :meth:`__enter__`
-           is required.
+        host: IP Address of the host. If empty, no connection will be attempted.
+            Defaults to the empty string.
+        port: Port to use. Defaults to ``502``.
+        timeout: Timeout in seconds. If ``None``, the default timeout will be
+            used. Defaults to ``None``.
+        connect: If ``True``, the client immediately connects to the given host.
+            A call to :meth:`connect` or :meth:`__enter__` is required otherwise.
 
     Attributes:
-        host (string): IP Adress of the host
+        host (string): IP Address of the host
         port (int): Port to use. Defaults to 502
         timeout (int or None): Timeout in seconds
     """
-    def __init__(self, host="", port=DEFAULT_PORT, timeout=None, connect=True):
+    def __init__(
+            self,
+            host: str = "",
+            port: int = DEFAULT_PORT,
+            timeout: float | None = None,
+            connect: bool = True
+        ) -> None:
         self._socket = None
 
         self.host: str = host
         self.port: int = port
-        self.timeout: int | None = timeout
+        self.timeout: float | None = timeout
 
         if self.host and connect:
             self.connect()
 
-    def __enter__(self):
+    def __enter__(self) -> "Client":
         if not self.is_connected():
             self.connect()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback) -> None:
         self.disconnect()
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Check if this client is connected to a server
 
         Return:
-            bool: True if and only if this client is connected to a server
+            ``True`` if and only if this client is connected to a server
         """
         return bool(self._socket)
 
-    def connect(self, **kwargs):
+    def connect(self, **kwargs)-> None:
         """Connect this client to a host
 
-        Arguments:
-            address (string): IP Adress of the host. If provided, it will replace
+        Args:
+            host: IP Address of the host. If provided, it will replace
                 the current :attr:`Client.address`. Defaults to
                 :attr:`Client.address`
-            port (int): Port to use. If provided, it will replace
+            port: Port to use. If provided, it will replace
                 the current :attr:`Client.port`. Defaults to :attr:`Client.port`.
             timeout (float): Timeout in seconds. If provided, it will replace
                 the current :attr:`Client.timeout`. Defaults to
                 :attr:`Client.timeout`
         """
         self.disconnect()
-        self.host = kwargs.get("address", self.host)
+        self.host = kwargs.get("host", self.host)
         self.port = kwargs.get("port", self.port)
         self.timeout = kwargs.get("timeout", self.timeout)
-        self._socket = socket.create_connection((self.host, self.port),
-                                                self.timeout)
+        self._socket = socket.create_connection(
+            (self.host, self.port),
+            self.timeout
+        )
 
-    def disconnect(self):
-        """Disconnect this client
+    def disconnect(self) -> None:
+        """Disconnect from host
 
         If this client is connected, the socket will be shutdown and then closed.
         If the client is not connected, calling this method has no effect.
@@ -84,20 +91,27 @@ class Client:
             self._socket.close()
             self._socket = None
 
-    def request(self, function, payload=b"", unit=NO_UNIT, transaction=0, **kwargs):
+    def request(
+            self,
+            function: int,
+            payload: bytes = b"",
+            unit: int = NO_UNIT,
+            transaction: int = 0,
+            **kwargs
+    ) -> ApplicationProtocolHeader:
         """Send a request to the server
 
-        Arguments:
-            function (int): Function code
-            payload (bytes): Data sent along with the request. Empty by default.
-                Used only for writing functions.
-            unit (int): Unit ID of device. Defaults to NO_UNIT
-            transaction (int): Transaction ID. Defaults to 0.
-            **kwargs (dict): Keyword arguments passed verbatim to the request of
+        Args:
+            function: Function code
+            payload: Data sent along with the request. Used only for writing
+                functions. Empty by default.
+            unit: Unit ID of device. Defaults to ``NO_UNIT``.
+            transaction: Transaction ID. Defaults to 0.
+            **kwargs: Keyword arguments passed verbatim to the request of
               the function
 
         Return:
-            ~modbus.ApplicationProtocolHeader: Header of the request
+            Header of the request
         """
         self.assert_connected()
         header, msg = new_request(function=function,
@@ -108,14 +122,14 @@ class Client:
         self._socket.sendall(msg)
         return header
 
-    def receive(self, size):
+    def receive(self, size: int) -> bytes:
         """Receive a given number of bytes from the server
 
-        Arguments:
-            size (int): Number of bytes to receive
+        Args:
+            size: Number of bytes to receive
 
         Return:
-            bytes: Buffer containing the received bytes.
+            Buffer containing the received bytes.
 
         Raises:
             ConnectionAbortedError: If the connection is terminated unexpectedly
@@ -131,12 +145,10 @@ class Client:
             chunks.append(chunk)
         return b"".join(chunks)
 
-    def get_response(self):
+    def get_response(self)-> tuple[ApplicationProtocolHeader, bytes, int | None]:
         """Get response from the server
 
         Return:
-            tuple(~modbusclient.ApplicationProtocolHeader, bytes, int): The
-            following values will be returned:
 
             * The received MBAP header
             * The raw data bytes of the payload without any headers
@@ -149,29 +161,33 @@ class Client:
 
         return header, payload, err_code
 
-    def iter_responses(self, n):
-        """Iter over a number of responses
+    def iter_responses(self, n: int) -> Generator[tuple[ApplicationProtocolHeader, bytes, int | None]]:
+        """Iterate over a number of responses
 
-        Attributes:
-            n (int): Number of request headers
+        Attrs:
+            n: Number of request headers
         """
         for i in range(n):
             yield self.get_response()
         return
 
-    def call(self, function, **kwargs):
+    def call(
+            self,
+            function: int,
+            **kwargs
+    ) -> tuple[ApplicationProtocolHeader, bytes, int | None]:
         """Call a function on the server and return the result
 
         Sends a request via :meth:`~modbus.Client.request` followed by an
         immediate call of :meth:`~modbus.Client.get_response`
 
-        Arguments:
-            function (int): Function code
+        Args:
+            function: Function code
             **kwargs: Keyword arguments passed verbatim to
                 :meth:`~modbus.Client.request`
 
         Return:
-            tuple: Data returned by :meth:`~modbus.Client.get_response`
+            Data returned by :meth:`~modbus.Client.get_response`
         """
         req = self.request(function, **kwargs)
         resp, data, error = self.get_response()
@@ -185,7 +201,7 @@ class Client:
 
         return resp, data, error
 
-    def assert_connected(self):
+    def assert_connected(self) -> None:
         """Assert client is connected
 
         A helper method which raises an exception, if the client is not connected
