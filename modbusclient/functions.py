@@ -1,5 +1,5 @@
 
-READ_COIL                     =  1
+READ_COILS                    =  1
 READ_DISCRETE_INPUTS          =  2
 READ_HOLDING_REGISTERS        =  3
 READ_INPUT_REGISTERS          =  4
@@ -18,7 +18,6 @@ MASK_WRITE_REGISTER           = 22
 READ_WRITE_MULTIPLE_REGISTERS = 23
 READ_FIFO_QUEUE               = 24
 READ_DEVICE_IDENTIFICATION    = 43
-
 
 ERROR_FLAG = 0x80
 
