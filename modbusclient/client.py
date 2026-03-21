@@ -22,9 +22,9 @@ class Client:
             A call to :meth:`connect` or :meth:`__enter__` is required otherwise.
 
     Attributes:
-        host (string): IP Address of the host
-        port (int): Port to use. Defaults to 502
-        timeout (int or None): Timeout in seconds
+        host: IP Address of the host
+        port: Port to use. Defaults to 502
+        timeout: Timeout in seconds
     """
     def __init__(
             self,
@@ -33,7 +33,7 @@ class Client:
             timeout: float | None = None,
             connect: bool = True
         ) -> None:
-        self._socket = None
+        self._socket: socket.socket | None = None
 
         self.host: str = host
         self.port: int = port
