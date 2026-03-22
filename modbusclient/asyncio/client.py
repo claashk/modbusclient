@@ -2,8 +2,8 @@ import asyncio
 from logging import getLogger
 
 from ..protocol import DEFAULT_PORT, ApplicationProtocolHeader, parse_response_body
-from ..protocol import new_request, parse_response_header
-from ..protocol import UNIT_MISMATCH, NO_UNIT, NO_ERROR, ModbusError
+from ..protocol import new_request, parse_response_header, NO_UNIT
+from ..error_codes import UNIT_MISMATCH, NO_ERROR, ModbusError
 
 logger = getLogger("modbusclient")
 
