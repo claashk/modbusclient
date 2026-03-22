@@ -27,12 +27,12 @@ class Client:
         timeout: Timeout in seconds
     """
     def __init__(
-            self,
-            host: str = "",
-            port: int = DEFAULT_PORT,
-            timeout: float | None = None,
-            connect: bool = True
-        ) -> None:
+        self,
+        host: str = "",
+        port: int = DEFAULT_PORT,
+        timeout: float | None = None,
+        connect: bool = True
+    ) -> None:
         self._socket: socket.socket | None = None
 
         self.host: str = host
@@ -161,7 +161,10 @@ class Client:
 
         return header, payload, err_code
 
-    def iter_responses(self, n: int) -> Generator[tuple[ApplicationProtocolHeader, bytes, int | None]]:
+    def iter_responses(
+        self,
+        n: int
+    ) -> Generator[tuple[ApplicationProtocolHeader, bytes, int | None]]:
         """Iterate over a number of responses
 
         Attrs:
@@ -172,9 +175,9 @@ class Client:
         return
 
     def call(
-            self,
-            function: int,
-            **kwargs
+        self,
+        function: int,
+        **kwargs
     ) -> tuple[ApplicationProtocolHeader, bytes, int | None]:
         """Call a function on the server and return the result
 
@@ -209,7 +212,6 @@ class Client:
         Raise:
             RuntimeError: if :meth:`~modbus.Client.is_connected` returns
             ``False``.
-
         """
         if not self.is_connected():
             raise RuntimeError("Client is not connected. Call connect first")
