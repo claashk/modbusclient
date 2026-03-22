@@ -29,11 +29,13 @@ class DeviceTestCase(unittest.TestCase):
 
     def test_messages(self):
         device = Device(api=self.api)
+
         self.assertListEqual(list(device.messages("*Voltage*")), self.api[2:])
-
         self.assertListEqual(list(device.messages("100?")), self.api)
-
         self.assertListEqual(list(device.messages(1000, "1001")), self.api[:2])
+        self.assertListEqual(list(device.messages(1000)), self.api[:1])
+        self.assertListEqual(list(device.messages(5000)), [])
+        self.assertListEqual(list(device.messages("5*")), [])
 
 
 def suite() -> unittest.TestSuite:

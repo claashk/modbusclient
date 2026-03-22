@@ -74,6 +74,7 @@ class ApiMixin:
         if not args:
             try:
                 yield self[pattern]
+                return
             except KeyError:
                 pass
 
