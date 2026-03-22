@@ -1,96 +1,83 @@
 import asyncio
 from logging import getLogger
 
-from ..protocol import ApplicationProtocolHeader, parse_response_body
+from ..protocol import DEFAULT_PORT, ApplicationProtocolHeader, parse_response_body
 from ..protocol import new_request, parse_response_header
 from ..protocol import UNIT_MISMATCH, NO_UNIT, NO_ERROR, ModbusError
 
 logger = getLogger("modbusclient")
 
 
-class Client(object):
+class Client:
     """Asynchronous Modbus client
 
     An asynchronous Modbus client, which can be used in an``async with`` block.
 
-    Arguments:
-        host (string): IP Adress of the host. If empty, no connection will be
+    Args:
+        host: IP Address of the host. If empty, no connection will be
             attempted. Defaults to the empty string.
-        port (int): Port to use. Defaults to 502
-        timeout (float): Timeout in seconds. If not set, it will be set to
+        port: Port to use. Defaults to 502
+        timeout: Timeout in seconds. If not set, it will be set to
            the default timeout. Currently not used.
-        max_transactions (int): Max. number of transactions send in parallel to
-            the server. Defaults to 3.
-        max_retries (int): Maximum number of connection retries. Defaults to 5.
+        max_transactions: Max. number of transactions send in parallel to the
+            server. Defaults to 3.
+        max_retries: Maximum number of connection retries. Defaults to 5.
             0 disables retries while ``None`` is equivalent to infinite retries.
-        loop (EventLoop): If set to ``None``, event loop will be determined by
-            the method. Defaults to ``None``. Deprecated from python 3.7 onwards.
     """
     def __init__(self,
-                 host="",
-                 port=502,
-                 timeout=None,
-                 max_transactions=3,
-                 max_retries=5,
-                 loop=None):
+        host: str = "",
+        port: int = DEFAULT_PORT,
+        timeout: float | None = None,
+        max_transactions: int = 3,
+        max_retries: int | None = 5
+    ) -> None:
         self._reader = None
         self._writer = None
-        self._host = host
-        self._port = port
+        self._host: str = str(host)
+        self._port: int = int(port)
         self._max_retries = int(max_retries) if max_retries is not None else None
-
-        # used only because get_running_loop is not available in python < 3.7 and
-        # the call to get_event_loop used instead is apparently expensive.
-        self._loop = loop
-
         self._transactions = max_transactions * [(None, None)]
         self._read_lock = asyncio.Lock()
 
     @property
-    def max_transactions(self):
+    def max_transactions(self) -> int:
         return len(self._transactions)
 
     @property
-    def loop(self):
-        if self._loop is None:
-            self._loop = asyncio.get_event_loop()
-        return self._loop
+    def loop(self) -> asyncio.AbstractEventLoop:
+        return asyncio.get_running_loop()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> None:
         await self.connect()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         self.disconnect()
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Check if this client is connected to a server
 
         Return:
-            bool: True if and only if this client is connected to a server
+            ``True`` if and only if this client is connected to a server
         """
         if self._writer is None or self._reader is None:
             return False
 
         if self._reader.at_eof() or self._writer.transport.is_closing():
             return False
-
         return True
 
-    async def connect(self, host=None, port=None, max_retries=None):
+    async def connect(self, **kwargs) -> None:
         """Connect this client to a host
 
-        Arguments:
-            host (string): IP Adress of the host
-            port (int): Port to use. Defaults to 502
-            max_retries (int): Maximum number of retries.
+        Args:
+            host: IP Address of the host
+            port: Port to use. Defaults to 502
+            max_retries: Maximum number of retries.
         """
         self.disconnect()
-        if host is not None:
-            self._host = host
-        if port is not None:
-            self._port = port
-        if max_retries is not None:
-            self._max_retries = max_retries
+        self._host = kwargs.get("host", self._host)
+        self._port = kwargs.get("port", self._port)
+        self._max_retries = kwargs.get("max_retries", self._max_retries)
 
         logger.debug(f"Connecting to {self._host}:{self._port} ...")
         retry = 0
@@ -102,16 +89,21 @@ class Client(object):
             except OSError as ex:
                 retry += 1
                 if self._max_retries is None or retry < self._max_retries:
-                    logger.debug(f"Connection failed: {ex}. Retry {retry} of "
-                                 f"{self._max_retries}")
+                    logger.debug(
+                        "Connection failed: %s. Retry %d%s",
+                        ex,
+                        retry,
+                        "" if self._max_retries is None
+                        else f" of {self._max_retries}"
+                    )
                     await asyncio.sleep(0.5)
                 else:
                     raise
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect this client
 
-        If this client is connected, the socket will be shutdown and then closed.
+        If the client is connected, the socket will be shutdown and then closed.
         If the client is not connected, calling this method has no effect.
         """
         if self.is_connected():
@@ -119,22 +111,26 @@ class Client(object):
             #cancel all existing future
             for i, (header, future) in enumerate(self._transactions):
                 if future is not None:
-                    logger.debug("Cancelled future for Transaction ID {} ..."
-                                 .format(header.transaction))
+                    logger.debug("Cancelled future for Transaction ID %s ...",
+                                 str(header.transaction))
                     future.cancel()
                     self._transactions[i] = (None, None)
 
             self._writer.close()
             self._reader = None
-            # await self._writer.wait_closed() -> python3.7
             self._writer = None
 
-    async def request(self,
-                      function,
-                      payload=b"",
-                      unit=NO_UNIT,
-                      transaction=None,
-                      **kwargs):
+    async def request(
+        self,
+        function: int,
+        payload: bytes = b"",
+        unit: int = NO_UNIT,
+        transaction: int | None = None,
+        **kwargs
+    ) -> tuple[
+        ApplicationProtocolHeader,
+        asyncio.Future[tuple[ApplicationProtocolHeader, bytes, int | None]]
+    ]:
         """Send a request to the server
 
         Awaits transaction ID `transaction` to become available. Then creates
@@ -145,12 +141,12 @@ class Client(object):
         :meth:`Client.get_response` is called. For a wrapper which makes sure
         the result is collected, see :meth:`Client.call`
 
-        Arguments:
-            function (int): Function code
-            payload (bytes): Data sent along with the request. Empty by default.
-                Used only for writing functions.
-            unit (int): Unit ID of device. Defaults to NO_UNIT
-            transaction (int): Transaction ID. If set to ``None``, a transaction
+        Args:
+            function: Function code
+            payload: Data sent along with the request. Empty by default. Ignored
+                for reading functions.
+            unit: Unit ID of device. Defaults to ``NO_UNIT``
+            transaction: Transaction ID. If set to ``None``, a transaction
                 ID will be generated by :meth:`Client.get_transaction_id`.
                 Defaults to ``None``.
             **kwargs: Keyword arguments passed verbatim to the request of the
@@ -165,7 +161,7 @@ class Client(object):
         Raise:
             ValueError: If transaction ID is out of bounds
         """
-        logger.debug("Requesting function %s", str(function))
+        logger.debug("Requesting function %d", function)
         await self.assert_connected()
         if transaction is None:
             transaction = await self.get_transaction_id()
@@ -188,26 +184,18 @@ class Client(object):
             logger.debug("Sent request with transaction ID %d.", transaction)
             await self._writer.drain()
         except Exception as exc:
-            logger.warning(f"Error sending request with transaction ID "
-                           f"{transaction}: {exc}")
+            logger.warning("Error sending request with transaction ID %d: %s",
+                           transaction, exc)
             future.set_exception(exc)
         self._transactions[transaction] = (header, future)
         return header, future
 
-    async def get_response(self):
+    async def get_response(self) -> None:
         """Get response from the server
 
         Locks the internal reader lock and reads the next message on the input
         stream. If the transaction ID is valid and a matching future is found,
         the result of the future will be set
-
-        Return:
-            tuple(~modbusclient.ApplicationProtocolHeader, bytes, int): The
-            following values are returned:
-
-            * The received MBAP header
-            * The raw data bytes of the payload without any headers
-            * An error code or ``None``, if no error occurred.
         """
         await self.assert_connected()
         logger.debug("Awaiting response ...")
@@ -247,20 +235,22 @@ class Client(object):
                          header.transaction)
         return
 
-    async def call(self, function, **kwargs):
+    async def call(
+        self,
+        function: int,
+        **kwargs
+    ) -> tuple[ApplicationProtocolHeader, bytes, int | None]:
         """Call a function on the server and await the result
 
         Sends a request via :meth:`Client.request` and processes responses until
         the resulting future is complete.
 
-        Arguments:
-            function (int): Function code
+        Args:
+            function: Function code
             **kwargs: Keyword arguments passed verbatim to
                 :meth:`~Client.request`.
 
         Return:
-            tuple(~modbusclient.ApplicationProtocolHeader, bytes, int): The
-            following values will be returned:
 
             * The received MBAP header
             * The raw data bytes of the payload without any headers
@@ -276,7 +266,7 @@ class Client(object):
             await self.get_response()
         return future.result()  # will raise, if an exception is set
 
-    async def assert_connected(self):
+    async def assert_connected(self) -> None:
         """Assert client is connected
 
         A helper method which raises an exception, if the client is not connected
@@ -289,7 +279,7 @@ class Client(object):
         if not self.is_connected():
             await self.connect()
 
-    async def get_transaction_id(self):
+    async def get_transaction_id(self) -> int:
         """Get transaction ID
 
         Checks whether any of the available transaction IDs is available and
@@ -297,13 +287,12 @@ class Client(object):
         :meth:`Client.get_response` is invoked, until a free ID is found.
 
         Return:
-            int: Available transaction ID in the range
-            ``[0:self.max_transactions]``.
+            Available transaction ID in the range ``[0: self.max_transactions]``.
         """
-        logger.debug("Generating transaction ID ..."),
+        logger.debug("Generating transaction ID ...")
         while True:
             for i, (header, future) in enumerate(self._transactions):
                 if future is None:
                     return i
-            logger.debug(f"Max. transactions ({self.max_transactions}) active")
+            logger.debug("Max. transactions (%d) active", self.max_transactions)
             await self.get_response()
