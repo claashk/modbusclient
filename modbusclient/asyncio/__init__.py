@@ -1,3 +1,3 @@
 from .client import Client
-from .api_wrapper import ApiWrapper
+from .device import Device
 from .autobahn import ComponentBase

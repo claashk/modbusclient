@@ -1,6 +1,6 @@
 from autobahn.asyncio.component import Component
 from autobahn.wamp.protocol import ApplicationSession
-from .api_wrapper import ApiWrapper
+from .device import Device
 
 class ComponentBase:
     """A base class for WAMP components
@@ -9,23 +9,23 @@ class ComponentBase:
     WAMP client using the Autobahn package. Provided you have an API client
     derived from  :class:`modbusclient.asyncio.ApiWrapper`, you can use this
     class as base class for your WAMP client and provide the API client
-    as `client` argument. This avoids the repetition of some boiler plate code.
+    as `client` argument. This avoids the repetition of some boilerplate code.
 
     Args:
         transports: Passed verbatim to
             :class:`autobahn.asyncio.component.Component` as `transports`.
         realm: WAMP realm. Passed verbatim to
             :class:`autobahn.asyncio.component.Component` as `realm`.
-        client: API wrapper implementation.
+        device: Device implementation.
     """
     def __init__(
         self,
         transports: list[str] | str,
         realm: str,
-        client: ApiWrapper
+        device: Device
     ) -> None:
         self._component: Component = Component(transports=transports, realm=realm)
-        self._client: ApiWrapper = client
+        self._device: Device = device
         self._component.on('join', self._join)
         self._component.on('leave', self._leave)
 
@@ -64,7 +64,7 @@ class ComponentBase:
             details: Dictionary with details.
         """
         self._session = session
-        self.info(f'Joined session {session}: {details}')
+        self.info(f"Joined session {session}: {details}")
 
     async def _leave(
         self,
